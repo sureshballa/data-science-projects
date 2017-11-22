@@ -35,3 +35,5 @@ nrow(rounds2_multiple_companies)
 round2_new_companies <- subset(rounds2, !(rounds2$company_permalink %in% companies$permalink))
 nrow(round2_new_companies)
 
+master_frame <- merge(companies, rounds2, by.x = "permalink", by.y = "company_permalink")
+nrow(master_frame)
