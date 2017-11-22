@@ -19,6 +19,7 @@ rounds2$company_permalink <- tolower(rounds2$company_permalink)
 nrow(rounds2)
 summary(rounds2)
 
+#19990 has NA for raised_amount_usd
 
 distinct_companies <- distinct(companies, permalink)
 distinch_companies_round2 <- distinct(rounds2, company_permalink)
@@ -37,3 +38,5 @@ nrow(round2_new_companies)
 
 master_frame <- merge(companies, rounds2, by.x = "permalink", by.y = "company_permalink")
 nrow(master_frame)
+
+avg_funding <- aggregate(master_frame$raised_amount_usd, by=list(master_frame$funding_round_type), FUN = mean, na.action=na.pass, na.rm=TRUE)
