@@ -1,4 +1,5 @@
 library(dplyr)
+library(tidyr)
 
 ## Please make sure to set current working directory to same directory where all the files are present
 companies <- read.delim("companies.txt", header = TRUE, sep = "\t", stringsAsFactors = FALSE, encoding = "UTF-8")
@@ -66,3 +67,20 @@ investments_for_post_ipo_debt <- filter(master_frame, funding_round_type == "pos
 top9_english_speaking_countries_of_investments_for_post_ipo_debt <- group_by(investments_for_post_ipo_debt, country)
 top9 <- summarise(top9_english_speaking_countries_of_investments_for_post_ipo_debt, raised_amount_usd = sum(raised_amount_usd, na.rm = T))
 arrange(top9, desc(top9$raised_amount_usd))
+
+
+sector_mappings <- read.csv("mapping.csv", header = TRUE, stringsAsFactors = FALSE, check.names=FALSE)
+sector_mappings_long_format <- gather(sector_mappings, sector, sector_val, 2:10)
+sector_mappings_long_format <- sector_mappings_long_format[!(sector_mappings_long_format$sector_val == 0),]
+sector_mappings_long_format <- sector_mappings_long_format[, -3]
+
+## TODO: Need to clean up sector mappings.
+
+getPrimarySector <- function(category_list_value) {
+  matchRecord <- filter(sector_mappings_long_format, sector_mappings_long_format$category_list == strsplit(category_list_value, "\\|")[[1]][1])
+  matchRecord$sector
+}
+
+#sapply is taking time, wait for statement to complete execution
+master_frame$primary_sector <- sapply(master_frame$category_list, getPrimarySector)
+
