@@ -12,6 +12,8 @@ companies$permalink <- tolower(companies$permalink)
 summary(companies)
 nrow(companies)
 
+## Start of Checkpoint 1: Data Cleaning 1
+
 rounds2 <- read.csv("rounds2.csv", header = TRUE, stringsAsFactors = FALSE, encoding = "UTF-8")
 
 ## Remove encoding and have everything to lower so that we can get accurate result to find unique records
@@ -41,6 +43,18 @@ nrow(round2_new_companies)
 master_frame <- merge(companies, rounds2, by.x = "permalink", by.y  = "company_permalink")
 nrow(master_frame)
 
+## End of Checkpoint 1: Data Cleaning 1
+
+## Start of Checkpoint 2: Funding Type Analysis
+
+avg_funding <- aggregate(master_frame$raised_amount_usd, by=list(master_frame$funding_round_type), FUN = mean, na.action=na.pass, na.rm=TRUE)
+avg_funding$fund_raised_in_million <- avg_funding$x / 1000000
+avg_funding_with_constrained_funding_types <- filter(avg_funding, avg_funding$Group.1 == "venture" | avg_funding$Group.1 == "angel" | avg_funding$Group.1 == "seed" | avg_funding$Group.1 == "private_equity")
+
+## End of Checkpoint 2: Funding Type Analysis
+
+## Start of Checkpoint 3: Country Analysis
+
 install.packages("countrycode")
 library("countrycode")
 #countrycode(c('USA', 'DZA', 'BAH'), 'iso3c', 'country.name')
@@ -59,16 +73,15 @@ all_english_speaking_countries <- c(english_speaking_countries_africa, english_s
 
 master_frame$is_english_speaking <- sapply(master_frame$country, function(colValue) is.element(colValue, all_english_speaking_countries))
 
-avg_funding <- aggregate(master_frame$raised_amount_usd, by=list(master_frame$funding_round_type), FUN = mean, na.action=na.pass, na.rm=TRUE)
-avg_funding$fund_raised_in_million <- avg_funding$x / 1000000
-avg_funding_with_constrained_funding_types <- filter(avg_funding, avg_funding$Group.1 == "venture" | avg_funding$Group.1 == "angel" | avg_funding$Group.1 == "seed" | avg_funding$Group.1 == "private_equity")
-
 #above query yeilds funding type of post_ipo_deb has most investments
 investments_for_post_ipo_debt <- filter(master_frame, funding_round_type == "venture", is_english_speaking == TRUE)
 top9_english_speaking_countries_of_investments_for_post_ipo_debt <- group_by(investments_for_post_ipo_debt, country)
 top9 <- summarise(top9_english_speaking_countries_of_investments_for_post_ipo_debt, raised_amount_usd = sum(raised_amount_usd, na.rm = T))
 arrange(top9, desc(top9$raised_amount_usd))
 
+## End of Checkpoint 3: Country Analysis
+
+## Start of Checkpoint 4: Sector Analysis 1
 
 sector_mappings <- read.csv("mapping.csv", header = TRUE, stringsAsFactors = FALSE, check.names=FALSE)
 sector_mappings_long_format <- gather(sector_mappings, sector, sector_val, 2:10)
