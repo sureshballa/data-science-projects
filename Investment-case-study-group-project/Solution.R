@@ -47,6 +47,7 @@ nrow(master_frame)
 
 ## Start of Checkpoint 2: Funding Type Analysis
 
+## TODO: Name the columns appropriately in below groupings
 avg_funding <- aggregate(master_frame$raised_amount_usd, by=list(master_frame$funding_round_type), FUN = mean, na.action=na.pass, na.rm=TRUE)
 avg_funding$fund_raised_in_million <- avg_funding$x / 1000000
 avg_funding_with_constrained_funding_types <- filter(avg_funding, avg_funding$Group.1 == "venture" | avg_funding$Group.1 == "angel" | avg_funding$Group.1 == "seed" | avg_funding$Group.1 == "private_equity")
@@ -88,10 +89,18 @@ sector_mappings_long_format <- gather(sector_mappings, sector, sector_val, 2:10)
 sector_mappings_long_format <- sector_mappings_long_format[!(sector_mappings_long_format$sector_val == 0),]
 sector_mappings_long_format <- sector_mappings_long_format[, -3]
 
-## TODO: Need to clean up sector mappings.
+## Clean up sector mappings. 
+## A0lytics, Big Data A0lytics, Business A0lytics are few examples
+## There is pattern to be observed here - na is replaced with 0,
+## so fix by replacing 0 with na
+
+install.packages("stringr")
+library("stringr")
+
+sector_mappings_long_format$category_list <- str_replace_all(sector_mappings_long_format$category_list, "0", "na")
 
 getPrimarySector <- function(category_list_value) {
-  matchRecord <- filter(sector_mappings_long_format, sector_mappings_long_format$category_list == strsplit(category_list_value, "\\|")[[1]][1])
+  matchRecord <- filter(sector_mappings_long_format, tolower(sector_mappings_long_format$category_list) == tolower(strsplit(category_list_value, "\\|")[[1]][1]))
   matchRecord$sector
 }
 
