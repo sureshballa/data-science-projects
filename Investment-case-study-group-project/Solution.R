@@ -99,11 +99,17 @@ library("stringr")
 
 sector_mappings_long_format$category_list <- str_replace_all(sector_mappings_long_format$category_list, "0", "na")
 
-getPrimarySector <- function(category_list_value) {
-  matchRecord <- filter(sector_mappings_long_format, tolower(sector_mappings_long_format$category_list) == tolower(strsplit(category_list_value, "\\|")[[1]][1]))
+master_frame$primary_sector <- sapply(master_frame$category_list, function(category_list) strsplit(category_list, "\\|")[[1]][1])
+
+getMainSector <- function(primary_sector_value) {
+  matchRecord <- filter(sector_mappings_long_format, tolower(sector_mappings_long_format$category_list) == tolower(primary_sector_value))
   matchRecord$sector
 }
 
 #sapply is taking time, wait for statement to complete execution
-master_frame$primary_sector <- sapply(master_frame$category_list, getPrimarySector)
+master_frame$main_sector <- sapply(master_frame$primary_sector, getMainSector)
+
+## End of Checkpoint 4: Sector Analysis 1
+
+## Start of Checkpoint 5: Sector Analysis 2
 
