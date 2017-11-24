@@ -103,7 +103,7 @@ master_frame$primary_sector <- sapply(master_frame$category_list, function(categ
 
 getMainSector <- function(primary_sector_value) {
   matchRecord <- filter(sector_mappings_long_format, tolower(sector_mappings_long_format$category_list) == tolower(primary_sector_value))
-  matchRecord$sector
+  matchRecord$sector[1]
 }
 
 #sapply is taking time, wait for statement to complete execution
@@ -113,3 +113,19 @@ master_frame$main_sector <- sapply(master_frame$primary_sector, getMainSector)
 
 ## Start of Checkpoint 5: Sector Analysis 2
 
+## Based in results from Checkpoint 3: Country Analysis, top 3 countries are
+## United States of America, United Kingdom of Great Britain and Northern Ireland, India
+
+sector_groups_d1 <- group_by(filter(master_frame, master_frame$funding_round_type == "venture", master_frame$country == "United States of America"), main_sector)
+sector_groups_d1_summary <- summarise(sector_groups_d1, count = n(), total_amount_invested = sum(raised_amount_usd, na.rm = T))
+D1 <- arrange(sector_groups_d1_summary, desc(total_amount_invested))
+
+sector_groups_d2 <- group_by(filter(master_frame, master_frame$funding_round_type == "venture", master_frame$country == "United Kingdom of Great Britain and Northern Ireland"), main_sector)
+sector_groups_d2_summary <- summarise(sector_groups_d2, count = n(), total_amount_invested = sum(raised_amount_usd, na.rm = T))
+D2 <- arrange(sector_groups_d2_summary, desc(total_amount_invested))
+
+sector_groups_d3 <- group_by(filter(master_frame, master_frame$funding_round_type == "venture", master_frame$country == "India"), main_sector)
+sector_groups_d3_summary <- summarise(sector_groups_d3, count = n(), total_amount_invested = sum(raised_amount_usd, na.rm = T))
+D3 <- arrange(sector_groups_d3_summary, desc(total_amount_invested))
+
+## End of Checkpoint 5: Sector Analysis 2
