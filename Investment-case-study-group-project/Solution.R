@@ -50,7 +50,11 @@ nrow(master_frame)
 ## TODO: Name the columns appropriately in below groupings
 avg_funding <- aggregate(master_frame$raised_amount_usd, by=list(master_frame$funding_round_type), FUN = mean, na.action=na.pass, na.rm=TRUE)
 avg_funding$fund_raised_in_million <- avg_funding$x / 1000000
+## Spark Funds wants to choose one of these four investment types for each potential investment they will make. Four investments mentioned are Seed, angel, venture, Private equity
 avg_funding_with_constrained_funding_types <- filter(avg_funding, avg_funding$Group.1 == "venture" | avg_funding$Group.1 == "angel" | avg_funding$Group.1 == "seed" | avg_funding$Group.1 == "private_equity")
+arrange(avg_funding_with_constrained_funding_types, desc(avg_funding_with_constrained_funding_types$fund_raised_in_million))
+
+## Above query yeilds funding type of venture has most investments. So lets go ahead with venture for next steps
 
 ## End of Checkpoint 2: Funding Type Analysis
 
@@ -74,11 +78,13 @@ all_english_speaking_countries <- c(english_speaking_countries_africa, english_s
 
 master_frame$is_english_speaking <- sapply(master_frame$country, function(colValue) is.element(colValue, all_english_speaking_countries))
 
-#above query yeilds funding type of post_ipo_deb has most investments
 investments_for_post_ipo_debt <- filter(master_frame, funding_round_type == "venture", is_english_speaking == TRUE)
 top9_english_speaking_countries_of_investments_for_post_ipo_debt <- group_by(investments_for_post_ipo_debt, country)
 top9 <- summarise(top9_english_speaking_countries_of_investments_for_post_ipo_debt, raised_amount_usd = sum(raised_amount_usd, na.rm = T))
 arrange(top9, desc(top9$raised_amount_usd))
+
+## Above query yeilds top 3 countries as United States of America, United Kingdom of Great Britain and Northern Ireland, India
+## Assumption here is - "United Kingdom of Great Britain and Northern Ireland" is english speaking country - meaning english as official language
 
 ## End of Checkpoint 3: Country Analysis
 
@@ -129,3 +135,6 @@ sector_groups_d3_summary <- summarise(sector_groups_d3, count = n(), total_amoun
 D3 <- arrange(sector_groups_d3_summary, desc(total_amount_invested))
 
 ## End of Checkpoint 5: Sector Analysis 2
+
+## Use below command to export all computed data and use it in tableau for plots
+## write.csv(master_frame, "master_frame.csv")
