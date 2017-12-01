@@ -167,5 +167,23 @@ D3 <- arrange(sector_groups_d3_summary, desc(total_amount_invested))
 ## write.csv(D2, "D2.csv")
 ## write.csv(D3, "D3.csv")
 
+## Table 5.1 Sl.no 9 and 10
+
+getCompanyReceivedTopInvestment <- function(sectorname, countryname, topValue) {
+  D1_investments_by_company <- group_by(filter(master_frame, master_frame$funding_round_type == "venture", master_frame$country == countryname, master_frame$main_sector == sectorname), permalink)
+  D1_investments_by_company_summary <- summarise(D1_investments_by_company, total_amount_invested = sum(raised_amount_usd, na.rm = T))
+  D1_investments_by_company_summary_ordered <- arrange(D1_investments_by_company_summary, desc(total_amount_invested))
+  head(D1_investments_by_company_summary_ordered, topValue)  
+}
+
+getCompanyReceivedTopInvestment("Others", "United States of America", 1)
+getCompanyReceivedTopInvestment("Others", "United Kingdom of Great Britain and Northern Ireland", 1)
+getCompanyReceivedTopInvestment("Others", "India", 1)
+
+getCompanyReceivedTopInvestment("Cleantech / Semiconductors", "United States of America", 1)
+getCompanyReceivedTopInvestment("Social, Finance, Analytics, Advertising", "United Kingdom of Great Britain and Northern Ireland", 1)
+getCompanyReceivedTopInvestment("Social, Finance, Analytics, Advertising", "India", 1)
+
+
 ## Use below command to export all computed data and use it in tableau for plots
 ## write.csv(master_frame, "master_frame.csv")
