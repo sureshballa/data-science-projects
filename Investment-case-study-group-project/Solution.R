@@ -145,15 +145,15 @@ master_frame$main_sector <- sapply(master_frame$primary_sector, getMainSector)
 ## Based in results from Checkpoint 3: Country Analysis, top 3 countries are
 ## United States of America, United Kingdom of Great Britain and Northern Ireland, India
 
-sector_groups_d1 <- group_by(filter(master_frame, master_frame$funding_round_type == "venture", master_frame$country == "United States of America"), main_sector)
+sector_groups_d1 <- group_by(filter(master_frame, master_frame$funding_round_type == "venture", master_frame$country == "United States of America", between(master_frame$raised_amount_usd, 5000000, 15000000)), main_sector)
 sector_groups_d1_summary <- summarise(sector_groups_d1, count = n(), total_amount_invested = sum(raised_amount_usd, na.rm = T))
 D1 <- arrange(sector_groups_d1_summary, desc(total_amount_invested))
 
-sector_groups_d2 <- group_by(filter(master_frame, master_frame$funding_round_type == "venture", master_frame$country == "United Kingdom of Great Britain and Northern Ireland"), main_sector)
+sector_groups_d2 <- group_by(filter(master_frame, master_frame$funding_round_type == "venture", master_frame$country == "United Kingdom of Great Britain and Northern Ireland", between(master_frame$raised_amount_usd, 5000000, 15000000)), main_sector)
 sector_groups_d2_summary <- summarise(sector_groups_d2, count = n(), total_amount_invested = sum(raised_amount_usd, na.rm = T))
 D2 <- arrange(sector_groups_d2_summary, desc(total_amount_invested))
 
-sector_groups_d3 <- group_by(filter(master_frame, master_frame$funding_round_type == "venture", master_frame$country == "India"), main_sector)
+sector_groups_d3 <- group_by(filter(master_frame, master_frame$funding_round_type == "venture", master_frame$country == "India", between(master_frame$raised_amount_usd, 5000000, 15000000)), main_sector)
 sector_groups_d3_summary <- summarise(sector_groups_d3, count = n(), total_amount_invested = sum(raised_amount_usd, na.rm = T))
 D3 <- arrange(sector_groups_d3_summary, desc(total_amount_invested))
 
@@ -161,16 +161,23 @@ D3 <- arrange(sector_groups_d3_summary, desc(total_amount_invested))
 
 ## Answers for Table 5.1 : Sector-wise Investment Analysis
 ## Requirement: all the observations refer to investments of the type FT within 5-15 M USD range. 
-## So we will fiter FT = venture and not really by range
-## Will save D1, D2 and D3 as csv and find answers for Table 5.1 questions
-## write.csv(D1, "D1.csv")
-## write.csv(D2, "D2.csv")
-## write.csv(D3, "D3.csv")
+## So we will fiter FT = venture and investment in range 5-15 M USD range.
+arrange(D1, desc(count))
+arrange(D2, desc(count))
+arrange(D3, desc(count))
+
+sum(D1$count)
+sum(D2$count)
+sum(D3$count)
+
+sum(D1$total_amount_invested)
+sum(D2$total_amount_invested)
+sum(D3$total_amount_invested)
 
 ## Table 5.1 Sl.no 9 and 10
 
 getCompanyReceivedTopInvestment <- function(sectorname, countryname, topValue) {
-  D1_investments_by_company <- group_by(filter(master_frame, master_frame$funding_round_type == "venture", master_frame$country == countryname, master_frame$main_sector == sectorname), permalink)
+  D1_investments_by_company <- group_by(filter(master_frame, master_frame$funding_round_type == "venture", master_frame$country == countryname, master_frame$main_sector == sectorname, between(master_frame$raised_amount_usd, 5000000, 15000000)), permalink, name)
   D1_investments_by_company_summary <- summarise(D1_investments_by_company, total_amount_invested = sum(raised_amount_usd, na.rm = T))
   D1_investments_by_company_summary_ordered <- arrange(D1_investments_by_company_summary, desc(total_amount_invested))
   head(D1_investments_by_company_summary_ordered, topValue)  
@@ -180,7 +187,7 @@ getCompanyReceivedTopInvestment("Others", "United States of America", 1)
 getCompanyReceivedTopInvestment("Others", "United Kingdom of Great Britain and Northern Ireland", 1)
 getCompanyReceivedTopInvestment("Others", "India", 1)
 
-getCompanyReceivedTopInvestment("Cleantech / Semiconductors", "United States of America", 1)
+getCompanyReceivedTopInvestment("Social, Finance, Analytics, Advertising", "United States of America", 1)
 getCompanyReceivedTopInvestment("Social, Finance, Analytics, Advertising", "United Kingdom of Great Britain and Northern Ireland", 1)
 getCompanyReceivedTopInvestment("Social, Finance, Analytics, Advertising", "India", 1)
 
