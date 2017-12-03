@@ -144,10 +144,23 @@ master_frame$main_sector <- sapply(master_frame$primary_sector, getMainSector)
 
 ## Based in results from Checkpoint 3: Country Analysis, top 3 countries are
 ## United States of America, United Kingdom of Great Britain and Northern Ireland, India
+## Also, notice filter 5 to 15 million -> this is because requirement specifies this in bold
+## Requirement text - 'Note: In the following table, all the observations refer to investments of the type FT within 5-15 M USD range'
 
 sector_groups_d1 <- group_by(filter(master_frame, master_frame$funding_round_type == "venture", master_frame$country == "United States of America", between(master_frame$raised_amount_usd, 5000000, 15000000)), main_sector)
 sector_groups_d1_summary <- summarise(sector_groups_d1, count = n(), total_amount_invested = sum(raised_amount_usd, na.rm = T))
 D1 <- arrange(sector_groups_d1_summary, desc(total_amount_invested))
+
+## Below is single line operation of computing D1 by using  pipe operation approach
+##D1 <- 
+##  filter(
+##          master_frame, 
+##          master_frame$funding_round_type == "venture", master_frame$country == "United States of America", between(master_frame$raised_amount_usd, 5000000, 15000000)
+##        ) %>% group_by(main_sector) %>% 
+##        summarise(
+##          count = n(), 
+##          total_amount_invested = sum(raised_amount_usd, na.rm = T)
+##        ) %>% arrange(total_amount_invested)
 
 sector_groups_d2 <- group_by(filter(master_frame, master_frame$funding_round_type == "venture", master_frame$country == "United Kingdom of Great Britain and Northern Ireland", between(master_frame$raised_amount_usd, 5000000, 15000000)), main_sector)
 sector_groups_d2_summary <- summarise(sector_groups_d2, count = n(), total_amount_invested = sum(raised_amount_usd, na.rm = T))
@@ -162,6 +175,7 @@ D3 <- arrange(sector_groups_d3_summary, desc(total_amount_invested))
 ## Answers for Table 5.1 : Sector-wise Investment Analysis
 ## Requirement: all the observations refer to investments of the type FT within 5-15 M USD range. 
 ## So we will fiter FT = venture and investment in range 5-15 M USD range.
+
 arrange(D1, desc(count))
 arrange(D2, desc(count))
 arrange(D3, desc(count))
@@ -180,7 +194,7 @@ getCompanyReceivedTopInvestment <- function(sectorname, countryname, topValue) {
   D1_investments_by_company <- group_by(filter(master_frame, master_frame$funding_round_type == "venture", master_frame$country == countryname, master_frame$main_sector == sectorname, between(master_frame$raised_amount_usd, 5000000, 15000000)), permalink, name)
   D1_investments_by_company_summary <- summarise(D1_investments_by_company, total_amount_invested = sum(raised_amount_usd, na.rm = T))
   D1_investments_by_company_summary_ordered <- arrange(D1_investments_by_company_summary, desc(total_amount_invested))
-  head(D1_investments_by_company_summary_ordered, topValue)  
+  head(D1_investments_by_company_summary_ordered, topValue)
 }
 
 getCompanyReceivedTopInvestment("Others", "United States of America", 1)
