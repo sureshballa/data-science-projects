@@ -188,6 +188,26 @@ sum(D1$total_amount_invested)
 sum(D2$total_amount_invested)
 sum(D3$total_amount_invested)
 
+## Because we are seeing Others as top main_sector for D1, D2 and D3, lets find top 2 primary sectors within each country for Others,
+## so that this serves as value add to investor who probably doesnt get what Others mean
+
+getTop2PrimarySectors <- function(countryName) {
+  filter(
+    master_frame, 
+    master_frame$funding_round_type == "venture", master_frame$country == countryName, between(master_frame$raised_amount_usd, 5000000, 15000000)
+  ) %>% group_by(main_sector, primary_sector) %>% 
+  summarise(
+    total_amount_invested = sum(raised_amount_usd, na.rm = T)
+  ) %>% 
+  filter(main_sector == "Others") %>% 
+  arrange(desc(total_amount_invested)) %>%
+  head(2) 
+}
+
+getTop2PrimarySectors("United States of America")
+getTop2PrimarySectors("United Kingdom of Great Britain and Northern Ireland")
+getTop2PrimarySectors("India")
+
 ## Table 5.1 Sl.no 9 and 10
 
 getCompanyReceivedTopInvestment <- function(sectorname, countryname, topValue) {
