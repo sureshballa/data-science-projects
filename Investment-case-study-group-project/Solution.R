@@ -25,7 +25,7 @@ summary(rounds2)
 
 ## 19990 has NA for raised_amount_usd
 
-## unique companies 
+## unique companies
 distinct_companies <- distinct(companies, permalink)
 distinch_companies_round2 <- distinct(rounds2, company_permalink)
 
@@ -33,19 +33,19 @@ distinch_companies_round2 <- distinct(rounds2, company_permalink)
 #library("sqldf")
 #sqldf("select Count(distinct company_permalink) as FundedCompanyCount from rounds2;")
 
-## unique companies in rounds2/ Funded 
+## unique companies in rounds2/ Funded
 nrow(distinct_companies)
 nrow(distinch_companies_round2)
 ## other approach
 #sqldf("select Count(distinct permalink) as CompanyCount from companies;")
 
-## companies in the rounds2 file which are not present in companies 
+## companies in the rounds2 file which are not present in companies
 round2_new_companies <- subset(rounds2, !(rounds2$company_permalink %in% companies$permalink))
 nrow(round2_new_companies)
 ## other approach
 #setdiff(levels(rounds2$company_permalink),levels(companies$permalink))
 
-## build master frame - merge companies & rounds2 
+## build master frame - merge companies & rounds2
 master_frame <- merge(companies, rounds2, by.x = "permalink", by.y  = "company_permalink")
 nrow(master_frame)
 
@@ -61,8 +61,8 @@ avg_funding_with_constrained_funding_types <- filter(avg_funding, avg_funding$Gr
 arrange(avg_funding_with_constrained_funding_types, desc(avg_funding_with_constrained_funding_types$fund_raised_in_million))
 
 ## other approach
-#sqldf("select funding_round_type, Avg(raised_amount_usd) 
-#      from rounds2 where funding_round_type in ('venture', 'angel', 'seed', 'private_equity') 
+#sqldf("select funding_round_type, Avg(raised_amount_usd)
+#      from rounds2 where funding_round_type in ('venture', 'angel', 'seed', 'private_equity')
 #      group by funding_round_type;")
 
 ## Above query yeilds funding type of venture has most investments. So lets go ahead with venture for next steps
@@ -118,7 +118,7 @@ sector_mappings_long_format <- gather(sector_mappings, sector, sector_val, 2:10)
 sector_mappings_long_format <- sector_mappings_long_format[!(sector_mappings_long_format$sector_val == 0),]
 sector_mappings_long_format <- sector_mappings_long_format[, -3]
 
-## Clean up sector mappings. 
+## Clean up sector mappings.
 ## A0lytics, Big Data A0lytics, Business A0lytics are few examples
 ## There is pattern to be observed here - na is replaced with 0,
 ## so fix by replacing 0 with na
@@ -152,13 +152,13 @@ sector_groups_d1_summary <- summarise(sector_groups_d1, count = n(), total_amoun
 D1 <- arrange(sector_groups_d1_summary, desc(total_amount_invested))
 
 ## Below is single line operation of computing D1 by using  pipe operation approach
-##D1 <- 
+##D1 <-
 ##  filter(
-##          master_frame, 
+##          master_frame,
 ##          master_frame$funding_round_type == "venture", master_frame$country == "United States of America", between(master_frame$raised_amount_usd, 5000000, 15000000)
-##        ) %>% group_by(main_sector) %>% 
+##        ) %>% group_by(main_sector) %>%
 ##        summarise(
-##          count = n(), 
+##          count = n(),
 ##          total_amount_invested = sum(raised_amount_usd, na.rm = T)
 ##        ) %>% arrange(total_amount_invested)
 
@@ -173,7 +173,7 @@ D3 <- arrange(sector_groups_d3_summary, desc(total_amount_invested))
 ## End of Checkpoint 5: Sector Analysis 2
 
 ## Answers for Table 5.1 : Sector-wise Investment Analysis
-## Requirement: all the observations refer to investments of the type FT within 5-15 M USD range. 
+## Requirement: all the observations refer to investments of the type FT within 5-15 M USD range.
 ## So we will fiter FT = venture and investment in range 5-15 M USD range.
 
 arrange(D1, desc(count))
@@ -193,15 +193,15 @@ sum(D3$total_amount_invested)
 
 getTop2PrimarySectors <- function(countryName) {
   filter(
-    master_frame, 
+    master_frame,
     master_frame$funding_round_type == "venture", master_frame$country == countryName, between(master_frame$raised_amount_usd, 5000000, 15000000)
-  ) %>% group_by(main_sector, primary_sector) %>% 
+  ) %>% group_by(main_sector, primary_sector) %>%
   summarise(
     total_amount_invested = sum(raised_amount_usd, na.rm = T)
-  ) %>% 
-  filter(main_sector == "Others") %>% 
+  ) %>%
+  filter(main_sector == "Others") %>%
   arrange(desc(total_amount_invested)) %>%
-  head(2) 
+  head(2)
 }
 
 getTop2PrimarySectors("United States of America")
