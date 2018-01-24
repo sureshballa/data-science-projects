@@ -154,6 +154,10 @@ doPlots(loan_data_set_categorical_variables_only, fun = plotBar, ii = 3:8, ncol 
 
 ## TODO: Segmented Univariate Analysis
 plotSegmentedUniavriateAnalysis(loan_data_set, which(colnames(loan_data_set) == "loan_status"), which(colnames(loan_data_set) == "grade"))
+plotSegmentedUniavriateAnalysis(loan_data_set, which(colnames(loan_data_set) == "loan_status"), which(colnames(loan_data_set) == "sub_grade"))
+plotSegmentedUniavriateAnalysis(loan_data_set, which(colnames(loan_data_set) == "loan_status"), which(colnames(loan_data_set) == "term"))
+plotSegmentedUniavriateAnalysis(loan_data_set, which(colnames(loan_data_set) == "loan_status"), which(colnames(loan_data_set) == "emp_length"))
+plotSegmentedUniavriateAnalysis(loan_data_set, which(colnames(loan_data_set) == "loan_status"), which(colnames(loan_data_set) == "home_ownership"))
 
 ##--------------------------------------------------------------------------------------------------------------
 
