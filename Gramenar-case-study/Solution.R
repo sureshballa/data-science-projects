@@ -32,6 +32,17 @@ plotBar <- function(data_in, i) {
     geom_text(aes(label = ..count.., y = ..count..), stat= "count", vjust = -0.3, position = position_dodge(width=0.9))
 }
 
+plotSegmentedUniavriateAnalysis <- function(data_in, dimension1_index, dimension2_index) {
+  ggplot(data_in, aes(x = data_in[[dimension1_index]], fill = data_in[[dimension2_index]] )) + 
+    labs(x = colnames(data_in)[dimension1_index], y = "Loans", fill = colnames(data_in)[dimension2_index]) +
+    theme(axis.text.x = element_text(face="plain", color="black", 
+                                     size=9, angle=0, vjust=0),
+          axis.text.y = element_text(face="plain", color="black", 
+                                     size=9, angle=0)) +
+    geom_bar(alpha = 0.8, position = position_dodge(width = 0.8)) +
+    geom_text(aes(label = ..count.., y = ..count..), stat= "count", vjust = -0.3, position = position_dodge(width=0.9))
+}
+
 ## TODO: Explain this function
 doPlots <- function(data_in, fun, ii, ncol=3) {
   pp <- list()
@@ -142,6 +153,7 @@ doPlots(loan_data_set_numerical_variables_only, fun = plotDen, ii = 1:ncol(loan_
 doPlots(loan_data_set_categorical_variables_only, fun = plotBar, ii = 3:8, ncol = 5)
 
 ## TODO: Segmented Univariate Analysis
+plotSegmentedUniavriateAnalysis(loan_data_set, which(colnames(loan_data_set) == "loan_status"), which(colnames(loan_data_set) == "grade"))
 
 ##--------------------------------------------------------------------------------------------------------------
 
