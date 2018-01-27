@@ -32,6 +32,7 @@ plotBar <- function(data_in, i) {
     geom_text(aes(label = ..count.., y = ..count..), stat= "count", vjust = -0.3, position = position_dodge(width=0.9))
 }
 
+
 plotSegmentedUniavriateAnalysis <- function(data_in, dimension1_index, dimension2_index) {
   ggplot(data_in, aes(x = data_in[[dimension1_index]], fill = data_in[[dimension2_index]] )) + 
     labs(x = colnames(data_in)[dimension1_index], y = "Loans", fill = colnames(data_in)[dimension2_index]) +
@@ -41,6 +42,13 @@ plotSegmentedUniavriateAnalysis <- function(data_in, dimension1_index, dimension
                                      size=9, angle=0)) +
     geom_bar(alpha = 0.8, position = position_dodge(width = 0.8)) +
     geom_text(aes(label = ..count.., y = ..count..), stat= "count", vjust = -0.3, position = position_dodge(width=0.9))
+}
+
+stackedbar <- function(data_in, dimension1_index, dimension2_index) {
+  ggplot(data_in, aes(x = data_in[[dimension1_index]], fill = data_in[[dimension2_index]])) + 
+    labs(x = colnames(data_in)[dimension1_index], y = "Loans", fill = colnames(data_in)[dimension2_index]) +
+    geom_bar(position = "fill") +
+    scale_y_continuous(labels = percent_format())
 }
 
 ## TODO: Explain this function
@@ -84,6 +92,11 @@ str(loan_data_set)
 table(loan_data_set$loan_status)
 prop.table(table(loan_data_set$loan_status))
 barplot(prop.table(table(loan_data_set$loan_status)))
+
+##pie chart showing loan status distribution
+dist <- paste(names(table(loan_data_set$loan_status)), "\n", table(loan_data_set$loan_status), sep="")
+pie(table(loan_data_set$loan_status), labels = dist, 
+    main="split of loan status")
 
 ## Handling of NA's
 NA.proportion <- function(x) mean(is.na(x))
@@ -145,7 +158,7 @@ loan_data_set_categorical_variables_only[sapply(loan_data_set_categorical_variab
 ## ignore this - ggplot(stack(loan_data_set), aes(x = ind, y = values)) + geom_boxplot()
 
 ## Denistity plots for numerica variables
-doPlots(loan_data_set_numerical_variables_only, fun = plotDen, ii = 1:ncol(loan_data_set_numerical_variables), ncol = 5)
+doPlots(loan_data_set_numerical_variables_only, fun = plotDen, ii = 1:ncol(loan_data_set_numerical_variables_only), ncol = 5)
 
 ## Bar plots for loan status for each categorical variables.
 ## Team, this took more than one hour for me - please reduce the columns to meaning full ones
@@ -155,18 +168,69 @@ doPlots(loan_data_set_categorical_variables_only, fun = plotBar, ii = 3:8, ncol 
 ## TODO: Segmented Univariate Analysis
 plotSegmentedUniavriateAnalysis(loan_data_set, which(colnames(loan_data_set) == "loan_status"), which(colnames(loan_data_set) == "grade"))
 plotSegmentedUniavriateAnalysis(loan_data_set, which(colnames(loan_data_set) == "loan_status"), which(colnames(loan_data_set) == "sub_grade"))
-plotSegmentedUniavriateAnalysis(loan_data_set, which(colnames(loan_data_set) == "loan_status"), which(colnames(loan_data_set) == "term"))
+
 plotSegmentedUniavriateAnalysis(loan_data_set, which(colnames(loan_data_set) == "loan_status"), which(colnames(loan_data_set) == "emp_length"))
-plotSegmentedUniavriateAnalysis(loan_data_set, which(colnames(loan_data_set) == "loan_status"), which(colnames(loan_data_set) == "home_ownership"))
+plotSegmentedUniavriateAnalysis(loan_data_set, which(colnames(loan_data_set) == "home_ownership"), which(colnames(loan_data_set) == "loan_status"))
 
 ##--------------------------------------------------------------------------------------------------------------
 
 ## Bivariate Analysis
-
+install.packages("corrplot")
 library(corrplot)
 correlationMatrix <- cor(loan_data_set_numerical_variables_only, use = "pairwise.complete.obs")
 corrplot(correlationMatrix, method = "color", type = "lower", order = "FPC", tl.cex = 0.6)
 
 ## TODO: Remove highly correlated columns, only keep one
+
+##added by merin##
+
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(scales)
+
+#employment length#
+
+chargedoff <- loan_data_set[loan_data_set$loan_status == "Charged Off",]
+chargedoff <- chargedoff[chargedoff$emp_length != "n/a",]
+table(chargedoff$emp_length)
+prop.table(table(chargedoff$emp_length))
+barplot(prop.table(table(chargedoff$emp_length)))
+ggplot(chargedoff, aes(emp_length)) + 
+  geom_bar(aes(x=reorder(emp_length,emp_length,
+                         function(x)-length(x)),y = (..count..)/sum(..count..))) + 
+  scale_y_continuous(labels=scales::percent) +
+  ylab("relative frequencies")
+
+# This Does not give much insight, compare it with chart above and delte if required
+stackedbar(loan_data_set, which(colnames(loan_data_set) == "emp_length"), which(colnames(loan_data_set) == "loan_status"))
+
+
+#home ownership#
+
+ggplot(loan_data_set, aes(x = home_ownership,fill=factor(loan_status))) + geom_bar(position = "stack")
+ggplot(chargedoff, aes(home_ownership)) + 
+  geom_bar(aes(x=reorder(home_ownership,home_ownership,
+                         function(x)-length(x)),y = (..count..)/sum(..count..))) + 
+  scale_y_continuous(labels=scales::percent) +
+  ylab("relative frequencies")
+
+# This Does not give much insight, compare it with chart above and delte if required
+stackedbar(loan_data_set, which(colnames(loan_data_set) == "home_ownership"), which(colnames(loan_data_set) == "loan_status"))
+
+
+#loan term#
+plotSegmentedUniavriateAnalysis(loan_data_set, which(colnames(loan_data_set) == "term"), which(colnames(loan_data_set) == "loan_status"))
+#loan term, i suggest to keep both#
+stackedbar(loan_data_set, which(colnames(loan_data_set) == "term"), which(colnames(loan_data_set) == "loan_status"))
+#grade#
+stackedbar(loan_data_set, which(colnames(loan_data_set) == "grade"), which(colnames(loan_data_set) == "loan_status"))
+#sub grade#
+stackedbar(loan_data_set, which(colnames(loan_data_set) == "sub_grade"), which(colnames(loan_data_set) == "loan_status"))
+
+
+
+
+
 
 ##--------------------------------------------------------------------------------------------------------------
