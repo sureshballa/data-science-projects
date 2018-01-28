@@ -28,7 +28,7 @@ load.libraries <-
 install.lib <-
   load.libraries[!load.libraries %in% installed.packages()]
 for (libs in install.lib)
-  install.packages(libs, dependences = TRUE)
+  install.packages(libs)
 sapply(load.libraries, require, character = TRUE)
 
 ##----------------------------- Begin of Reusable functions for plots -----------------------------##
