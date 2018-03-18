@@ -192,6 +192,13 @@ if (length(nearZeroVariances_trues_indexes) > 0) {
 
 ## Numerical vs Categorical seperation
 
+master_frame$StockOptionLevel <- as.character(master_frame$StockOptionLevel)
+master_frame$EnvironmentSatisfaction <- as.character(master_frame$EnvironmentSatisfaction)
+master_frame$JobSatisfaction <- as.character(master_frame$JobSatisfaction)
+master_frame$JobInvolvement <- as.character(master_frame$JobInvolvement)
+master_frame$PerformanceRating <- as.character(master_frame$PerformanceRating)
+master_frame$WorkLifeBalance <- as.character(master_frame$WorkLifeBalance)
+
 categorical_variables = names(master_frame)[which(sapply(master_frame, is.character))]
 numerical_variables = names(master_frame)[which(sapply(master_frame, is.numeric))]
 
