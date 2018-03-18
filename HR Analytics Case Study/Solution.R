@@ -239,4 +239,18 @@ corrplot(correlationMatrix, method = "color", type = "lower", order = "FPC", tl.
 ## End of Bivariate Analysis
 ################################################################################################################################################
 
+## Start of modelling work
+
+## Remove EmployeeId from master frame which is not required
+master_frame <- master_frame[,- which(colnames(master_frame)=='EmployeeID')]
+
+## Start of Dummy variables creation for categorical variables
+
+dmy <- dummyVars(" ~ .", data = master_frame, fullRank=T)
+master_frame_with_dummy_variables <- data.frame(predict(dmy, newdata = master_frame))
+
+## End of Dummy variables creation for categorical variables
+
+##TODO: Scale age, monthly incomes, total_hours etc to avoid biased modelling
+
 
