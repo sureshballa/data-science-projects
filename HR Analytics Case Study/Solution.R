@@ -14,7 +14,7 @@
 
 ## Begin of Install and load required libraries
 
-load.libraries <- c('reshape', 'stringr', 'dplyr', 'data.table', 'e1071', 'gridExtra', 'corrplot', 'ggplot2', 'tidyr', 'MASS', 'car', 'caret')
+load.libraries <- c('reshape', 'stringr', 'dplyr', 'data.table', 'e1071', 'gridExtra', 'corrplot', 'ggplot2', 'tidyr', 'MASS', 'car', 'caret', 'GGally')
 install.lib <- load.libraries[!load.libraries %in% installed.packages()]
 for(libs in install.lib) install.packages(libs, dependencies = TRUE)
 sapply(load.libraries, require, character = TRUE)
@@ -67,6 +67,24 @@ plotDen <- function(data_in, i){
   p <- ggplot(data= data) + geom_line(aes(x = x), stat = 'density', size = 1,alpha = 1.0) +
     xlab(paste0((colnames(data_in)[i]), '\n', 'Skewness: ',round(skewness(data_in[[i]], na.rm = TRUE), 2))) + theme_light() 
   return(p)
+}
+
+plotSegmentedUniavriateAnalysis <- function(data_in, i) {
+  ggplot(data_in, aes(x = data_in[[i]], fill = Attrition )) + 
+    labs(x = colnames(data_in)[i], y = "Count", fill = "Attrition") +
+    theme(axis.text.x = element_text(face="plain", color="black", 
+                                     size=9, angle=0, vjust=0),
+          axis.text.y = element_text(face="plain", color="black", 
+                                     size=9, angle=0)) +
+    geom_bar(alpha = 0.8, position = position_dodge(width = 0.8)) +
+    geom_text(aes(label = ..count.., y = ..count..), stat= "count", vjust = -0.3, position = position_dodge(width=0.9))
+}
+
+plotSegmentedUniavriateAnalysisWithStackedBar <- function(data_in, i) {
+  ggplot(data_in, aes(x = data_in[[i]], fill = Attrition)) + 
+    labs(x = colnames(data_in)[i], y = "Percentage", fill = "Attrition") +
+    geom_bar(position = "fill")
+    ##scale_y_continuous(labels = percent_format())
 }
 
 ## End of Reusable functions for plots
@@ -200,7 +218,9 @@ doPlots(master_frame_categorical_variables_only, fun = plotBar, ii = 1:ncol(mast
 ################################################################################################################################################
 
 ## Begin of Segmented Univariate Analysis
-
+# Bar plots of variables against attribution
+doPlots(master_frame_categorical_variables_only, fun = plotSegmentedUniavriateAnalysis, ii = 1:ncol(master_frame_categorical_variables_only), ncol = 3)
+doPlots(master_frame_categorical_variables_only, fun = plotSegmentedUniavriateAnalysisWithStackedBar, ii = 1:ncol(master_frame_categorical_variables_only), ncol = 3)
 ## End of Segmented Univariate Analysis
 ################################################################################################################################################
 
