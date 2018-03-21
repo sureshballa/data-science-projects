@@ -161,9 +161,19 @@ employee_in_out_times$Hours <- difftime(employee_in_out_times$OutTime, employee_
 employee_in_out_times$Hours <- as.numeric(employee_in_out_times$Hours)
 employee_in_out_times$year <- format(employee_in_out_times$Date,"%Y")
 employee_in_out_times$month <- format(employee_in_out_times$Date,"%m")
+employee_in_out_times$week <- format(employee_in_out_times$Date,"%W")
 
 employee_time_aggregated_per_month <- employee_in_out_times %>% group_by(EmployeeID, year, month) %>% summarise(totalRecords = n(), total_hours=sum(Hours, na.rm = T), avg_hours_per_day=mean(Hours, na.rm = T))
-employee_time_aggregated <- employee_in_out_times %>% group_by(EmployeeID) %>% summarise(total_hours=sum(Hours, na.rm = T), avg_hours_per_day=mean(Hours, na.rm = T))
+employee_time_aggregated_weekly <- employee_in_out_times %>% group_by(EmployeeID, year, week) %>% summarise(totalRecords = n(), total_weekly_hours=sum(Hours, na.rm = T))
+numberOfWeeksLoaded <- function(weekly_hours) {
+  sum(weekly_hours >= 45)
+}
+numberOfWeeksWithLowWork <- function(weekly_hours) {
+  sum(weekly_hours <= 10)
+}
+employee_time_aggregated <- employee_time_aggregated_weekly %>% group_by(EmployeeID) %>% summarise(weekly_hours_avg=mean(total_weekly_hours, na.rm = T), 
+                                                                                                   loaded_week_frequency = numberOfWeeksLoaded(total_weekly_hours),
+                                                                                                   low_work_week_frequency = numberOfWeeksWithLowWork(total_weekly_hours))
 
 employee_data_with_office_hours <- merge(general_data, employee_time_aggregated, by="EmployeeID")
 employee_data_with_office_hours_with_employee_survey_data <- merge(employee_data_with_office_hours, employee_survey_data, by="EmployeeID")
@@ -219,9 +229,6 @@ master_frame_categorical_variables_only[sapply(master_frame_categorical_variable
   lapply(master_frame_categorical_variables_only[sapply(master_frame_categorical_variables_only, is.character)], 
          as.factor)
 
-##matrix_numeric_indices <- matrix(1:ncol(master_frame_numerical_variables_only), ncol=5, byrow = T)
-##matrix_character_indices <- matrix(1:ncol(master_frame_categorical_variables_only), ncol=5, byrow = T)
-
 ## End of Numerical vs Categorical seperation
 ################################################################################################################################################
 
@@ -229,7 +236,6 @@ master_frame_categorical_variables_only[sapply(master_frame_categorical_variable
 
 ## Denistity plots for numeric variables
 doPlots(master_frame_numerical_variables_only, fun = plotDen, ii = 1:ncol(master_frame_numerical_variables_only), ncol = 5)
-#doPlots(master_frame_numerical_variables_only, fun = plotDen, ii = matrix_numeric_indices[1,], ncol = 5)
 
 ## Bar plots each categorical variables.
 doPlots(master_frame_categorical_variables_only, fun = plotBar, ii = 1:ncol(master_frame_categorical_variables_only), ncol = 3)
