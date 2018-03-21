@@ -87,6 +87,13 @@ plotSegmentedUniavriateAnalysisWithStackedBar <- function(data_in, i) {
     ##scale_y_continuous(labels = percent_format())
 }
 
+plotBoxPlotsAgainstAttrition <- function(data_in, i) {
+  p <- ggplot(data=data_in, aes(x = Attrition, y = factor(data_in[[i]]), fill = Attrition)) + geom_boxplot(width=0.2) + 
+    coord_flip() + theme(axis.text.x = element_text(angle = 90, hjust =1)) + 
+    ylab(colnames(data_in)[i])
+  return (p)
+}
+
 ## End of Reusable functions for plots
 ################################################################################################################################################
 
@@ -234,6 +241,10 @@ doPlots(master_frame_categorical_variables_only, fun = plotBar, ii = 1:ncol(mast
 # Bar plots of variables against attribution
 doPlots(master_frame_categorical_variables_only, fun = plotSegmentedUniavriateAnalysis, ii = 1:ncol(master_frame_categorical_variables_only), ncol = 3)
 doPlots(master_frame_categorical_variables_only, fun = plotSegmentedUniavriateAnalysisWithStackedBar, ii = 1:ncol(master_frame_categorical_variables_only), ncol = 3)
+
+# Boxplots of numeric variables relative to attrition status
+doPlots(cbind(master_frame_numerical_variables_only, Attrition = master_frame$Attrition), fun = plotBoxPlotsAgainstAttrition, ii = 1:ncol(master_frame_numerical_variables_only), ncol = 3)
+
 ## End of Segmented Univariate Analysis
 ################################################################################################################################################
 
@@ -252,8 +263,13 @@ master_frame <- master_frame[,- which(colnames(master_frame)=='EmployeeID')]
 
 ## Start of Dummy variables creation for categorical variables
 
+## Note - dummyVars creates dummy variables for all character/factor, we want avoid target variable,
+## so converting Attrition to numeric and back to character after dummy variable creation process is done 
+master_frame$Attrition <- ifelse(master_frame$Attrition=="Yes",1,0)
+master_frame$Attrition <- as.numeric(master_frame$Attrition)
 dmy <- dummyVars(" ~ .", data = master_frame, fullRank=T)
 master_frame_with_dummy_variables <- data.frame(predict(dmy, newdata = master_frame))
+master_frame_with_dummy_variables$Attrition <- as.character(master_frame$Attrition)
 
 ## End of Dummy variables creation for categorical variables
 
