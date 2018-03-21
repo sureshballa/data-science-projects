@@ -88,9 +88,9 @@ plotSegmentedUniavriateAnalysisWithStackedBar <- function(data_in, i) {
 }
 
 plotBoxPlotsAgainstAttrition <- function(data_in, i) {
-  p <- ggplot(data=data_in, aes(x = Attrition, y = factor(data_in[[i]]), fill = Attrition)) + geom_boxplot(width=0.2) + 
-    coord_flip() + theme(axis.text.x = element_text(angle = 90, hjust =1)) + 
-    ylab(colnames(data_in)[i])
+  p <- ggplot(data=data_in, aes(x = Attrition, y = data_in[[i]], fill = Attrition)) + geom_boxplot(width=0.2) + 
+    labs(y = colnames(data_in)[i], fill = "Attrition") + coord_flip() + 
+    theme(legend.position="none")
   return (p)
 }
 
