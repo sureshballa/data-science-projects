@@ -198,6 +198,8 @@ master_frame$JobSatisfaction <- as.character(master_frame$JobSatisfaction)
 master_frame$JobInvolvement <- as.character(master_frame$JobInvolvement)
 master_frame$PerformanceRating <- as.character(master_frame$PerformanceRating)
 master_frame$WorkLifeBalance <- as.character(master_frame$WorkLifeBalance)
+master_frame$Education = as.character(master_frame$Education)
+master_frame$JobLevel = as.character(master_frame$JobLevel)
 
 categorical_variables = names(master_frame)[which(sapply(master_frame, is.character))]
 numerical_variables = names(master_frame)[which(sapply(master_frame, is.numeric))]
@@ -210,6 +212,9 @@ master_frame_categorical_variables_only[sapply(master_frame_categorical_variable
   lapply(master_frame_categorical_variables_only[sapply(master_frame_categorical_variables_only, is.character)], 
          as.factor)
 
+##matrix_numeric_indices <- matrix(1:ncol(master_frame_numerical_variables_only), ncol=5, byrow = T)
+##matrix_character_indices <- matrix(1:ncol(master_frame_categorical_variables_only), ncol=5, byrow = T)
+
 ## End of Numerical vs Categorical seperation
 ################################################################################################################################################
 
@@ -217,6 +222,7 @@ master_frame_categorical_variables_only[sapply(master_frame_categorical_variable
 
 ## Denistity plots for numeric variables
 doPlots(master_frame_numerical_variables_only, fun = plotDen, ii = 1:ncol(master_frame_numerical_variables_only), ncol = 5)
+#doPlots(master_frame_numerical_variables_only, fun = plotDen, ii = matrix_numeric_indices[1,], ncol = 5)
 
 ## Bar plots each categorical variables.
 doPlots(master_frame_categorical_variables_only, fun = plotBar, ii = 1:ncol(master_frame_categorical_variables_only), ncol = 3)
