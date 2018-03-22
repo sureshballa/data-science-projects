@@ -14,7 +14,7 @@
 
 ## Begin of Install and load required libraries
 
-load.libraries <- c('reshape', 'stringr', 'dplyr', 'data.table', 'e1071', 'gridExtra', 'corrplot', 'ggplot2', 'tidyr', 'MASS', 'car', 'caret', 'GGally')
+load.libraries <- c('reshape', 'stringr', 'dplyr', 'data.table', 'e1071', 'gridExtra', 'corrplot', 'ggplot2', 'tidyr', 'MASS', 'car', 'caret', 'GGally', 'mice')
 install.lib <- load.libraries[!load.libraries %in% installed.packages()]
 for(libs in install.lib) install.packages(libs, dependencies = TRUE)
 sapply(load.libraries, require, character = TRUE)
@@ -191,7 +191,21 @@ colSums(is.na(master_frame))
 colMeans(is.na(master_frame))
 barplot(colMeans(is.na(master_frame)))
 
-## No major missing values, so no action required
+## EnvironmentSatisfaction has 19 NA's for NumCompaniesWorked, 9 NA's for TotalWorkingYears, 25 NA's for EnvironmentSatisfaction, JobSatisfaction has 20 NA's, WorkLifeBalance has 38 NA's
+
+md.pattern(master_frame)
+#Imputing missing values using mice
+mice_imputes = mice(master_frame, m=5, maxit = 40)
+mice_imputes$method
+## As expected pmm methods have been used
+master_frame <- complete(mice_imputes)
+
+## Lets confirm NA's again
+colSums(is.na(master_frame))
+colMeans(is.na(master_frame))
+barplot(colMeans(is.na(master_frame)))
+
+## No more NA's, we are good
 
 ## End of Handling of NA's
 ################################################################################################################################################
