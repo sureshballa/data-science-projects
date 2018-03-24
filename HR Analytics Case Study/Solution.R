@@ -69,6 +69,7 @@ plotDen <- function(data_in, i){
   return(p)
 }
 
+## reusable function to plot segmented univariate analysis
 plotSegmentedUniavriateAnalysis <- function(data_in, i) {
   ggplot(data_in, aes(x = data_in[[i]], fill = Attrition )) + 
     labs(x = colnames(data_in)[i], y = "Count", fill = "Attrition") +
@@ -80,6 +81,7 @@ plotSegmentedUniavriateAnalysis <- function(data_in, i) {
     geom_text(aes(label = ..count.., y = ..count..), stat= "count", vjust = -0.3, position = position_dodge(width=0.9))
 }
 
+## reusable function to plot segmented univariate analysis with stacked bar
 plotSegmentedUniavriateAnalysisWithStackedBar <- function(data_in, i) {
   ggplot(data_in, aes(x = data_in[[i]], fill = Attrition)) + 
     labs(x = colnames(data_in)[i], y = "Percentage", fill = "Attrition") +
@@ -87,6 +89,7 @@ plotSegmentedUniavriateAnalysisWithStackedBar <- function(data_in, i) {
   ##scale_y_continuous(labels = percent_format())
 }
 
+## reusable function to plot boz plot against Attrition
 plotBoxPlotsAgainstAttrition <- function(data_in, i) {
   p <- ggplot(data=data_in, aes(x = Attrition, y = data_in[[i]], fill = Attrition)) + geom_boxplot(width=0.2) + 
     labs(y = colnames(data_in)[i], fill = "Attrition") + coord_flip() + 
@@ -210,6 +213,38 @@ barplot(colMeans(is.na(master_frame)))
 ## End of Handling of NA's
 ################################################################################################################################################
 
+## Start of Binning of continous variables based on WOE and IV
+## Age, Distance and TotalWorkingHours are eligible candidates for Binning based on WOE and IV
+## Detailed analysis of why these groups have been included in presentation slide deck
+
+## binning function for age
+getAgeGroup <- function(age) {
+  cut(age, breaks = c(8,25,30,35,50,60), labels = c("18-25", "26-30", "31-35", "36-50", "50-60"), include.lowest = TRUE, right = TRUE)
+}
+
+## binning function for distance from office
+getDistanceGroup <- function(distance) {
+  cut(distance, breaks = c(1,5,10,15,20,29), labels = c("1-5", "6-10", "11-15", "16-20", "21-29"), include.lowest = TRUE, right = TRUE)
+}
+
+## binning function for total working years
+getTotalWorkingYearsGroup <- function(totalWorkingYears) {
+  cut(totalWorkingYears, breaks = c(0,2,5,10,40), labels = c("0-2", "3-5", "6-10", "11-40"), include.lowest = TRUE, right = TRUE)
+}
+
+master_frame$AgeGroup <- sapply(as.numeric(master_frame$Age), getAgeGroup)
+master_frame$DistanceGroup <- sapply(as.numeric(master_frame$DistanceFromHome), getDistanceGroup)
+master_frame$TotalWorkingYearsGroup <- sapply(as.numeric(master_frame$TotalWorkingYears), getTotalWorkingYearsGroup)
+
+## Lets make sure these are charcter types, becase down the line, we are seperating categorical vs numeric based on this
+master_frame$AgeGroup <- as.character(master_frame$AgeGroup)
+master_frame$DistanceGroup <- as.character(master_frame$DistanceGroup)
+master_frame$TotalWorkingYearsGroup <- as.character(master_frame$TotalWorkingYearsGroup)
+
+## Start of Binning of continous variables based on WOE and IV
+################################################################################################################################################
+
+
 ## Remove near zero variance variables which doesnt makese sense (For example, col having only one value is of no use)
 nearZeroVariances <- nearZeroVar(master_frame, saveMetrics = TRUE)
 nearZeroVariances_trues_indexes <- which(nearZeroVariances$nzv == TRUE)
@@ -248,7 +283,9 @@ master_frame_categorical_variables_only[sapply(master_frame_categorical_variable
 
 ## Univariate Analysis
 
-## Denistity plots for numeric variables
+## For all plots below, please zoom or full screen for better view
+
+## Denstity plots for numeric variables
 doPlots(master_frame_numerical_variables_only, fun = plotDen, ii = 1:ncol(master_frame_numerical_variables_only), ncol = 5)
 
 ## Bar plots each categorical variables.
@@ -258,7 +295,7 @@ doPlots(master_frame_categorical_variables_only, fun = plotBar, ii = 1:ncol(mast
 ################################################################################################################################################
 
 ## Begin of Segmented Univariate Analysis
-# Bar plots of variables against attribution
+## Bar plots of variables against attribution
 doPlots(master_frame_categorical_variables_only, fun = plotSegmentedUniavriateAnalysis, ii = 1:ncol(master_frame_categorical_variables_only), ncol = 3)
 doPlots(master_frame_categorical_variables_only, fun = plotSegmentedUniavriateAnalysisWithStackedBar, ii = 1:ncol(master_frame_categorical_variables_only), ncol = 3)
 
@@ -281,9 +318,14 @@ corrplot(correlationMatrix, method = "color", type = "lower", order = "FPC", tl.
 ## Remove EmployeeId from master frame which is not required
 master_frame <- master_frame[,- which(colnames(master_frame)=='EmployeeID')]
 
+## Also lets delete Age, DistanceFromHome and TotalWorkingYears becase we binned them
+master_frame <- master_frame[,- which(colnames(master_frame)=='Age')]
+master_frame <- master_frame[,- which(colnames(master_frame)=='DistanceFromHome')]
+master_frame <- master_frame[,- which(colnames(master_frame)=='TotalWorkingYears')]
+
 ## Start of Dummy variables creation for categorical variables
 
-## Note - dummyVars creates dummy variables for all character/factor, we want avoid target variable,
+## Note - dummyVars creates dummy variables for all character/factor, we want to avoid target variable,
 ## so converting Attrition to numeric and back to character after dummy variable creation process is done 
 master_frame$Attrition <- ifelse(master_frame$Attrition=="Yes",1,0)
 master_frame$Attrition <- as.numeric(master_frame$Attrition)
@@ -291,9 +333,8 @@ dmy <- dummyVars(" ~ .", data = master_frame, fullRank=T)
 employee <- data.frame(predict(dmy, newdata = master_frame))
 employee$Attrition <- as.numeric(master_frame$Attrition)
 
-##TODO: Scale age, monthly incomes, total_hours etc to avoid biased modelling,
-##I think we need to scale the variables in case of clustering to adjust the mean while
-##calculating the eucledean distance.
+##Scale monthly incomes
+employee$MonthlyIncome <- scale(employee$MonthlyIncome)
 
 ########################################################################
 # splitting the data between train and test
