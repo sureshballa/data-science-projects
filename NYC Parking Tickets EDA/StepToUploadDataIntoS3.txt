@@ -1,7 +1,7 @@
 Step 1: Open Google Chrom
 Step 2: Go to New Tab and paste https://chrome.google.com/webstore/search/cookies.txt
 Step 3: Add Cookies.txt Extension to your Chrome
-Step 4: Go to Kaggle Site https://www.kaggle.com/new-york-city/nyc-parking-tickets/data
+Step 4: Go to Kaggle Site https://www.kaggle.com/new-york-city/nyc-parking-tickets/data (Please create an account in Kaggle if you don't have  	       one and make sure you are sign in before you copy the cookie data)
 Step 5: Click on the Export Cookie.txt icon on top right corner and copy paste vallue into a txt file called cookie.txt
 Step 6: Then install WinSCP - follow this link https://www.youtube.com/watch?v=nSX4GjnmGlU
 Step 7: Once installed and connected to AWS move cookie.txt to home directory
