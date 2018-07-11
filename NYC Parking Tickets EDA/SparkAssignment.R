@@ -1,4 +1,8 @@
 ## Instruction to reviewer: Please make sure to set correct path for s3 based files
+bucket_path <- "s3://data-science-big-data-analytics-suresh/nyc-parking-case-study/";
+filepath_2015 <- paste(bucket_path, "Parking_Violations_Issued_-_Fiscal_Year_2015.csv", sep = "")
+filepath_2016 <- paste(bucket_path, "Parking_Violations_Issued_-_Fiscal_Year_2016.csv", sep = "")
+filepath_2017 <- paste(bucket_path, "Parking_Violations_Issued_-_Fiscal_Year_2017.csv", sep = "")
 
 ## IIITB - Group_Facilitator_RollNo: DDA1730041
 ## Team:
@@ -14,62 +18,145 @@ library(SparkR)
 # initialise the spark session
 sparkR.session(master='local')
 # 2. Create a Spark DataFrame and examine structure
-# reading a CSV file from S3 bucket
-parking_violations_issued_2015 <- SparkR::read.df("s3://data-science-big-data-analytics-suresh/nyc-parking-case-study/Parking_Violations_Issued_-_Fiscal_Year_2015.csv", header=T, "CSV", na.strings = c("NA","NaN","","#DIV/0!"))
-
-## TODO: Please uncomment the below line and execute same query commands
-## parking_violations_issued_2016 <- SparkR::read.df("s3://data-science-big-data-analytics-suresh/nyc-parking-case-study/Parking_Violations_Issued_-_Fiscal_Year_2016.csv", header=T, "CSV", na.strings = c("NA","NaN","","#DIV/0!"))
-## parking_violations_issued_2017 <- SparkR::read.df("s3://data-science-big-data-analytics-suresh/nyc-parking-case-study/Parking_Violations_Issued_-_Fiscal_Year_2017.csv", header=T, "CSV". na.strings = c("NA","NaN","","#DIV/0!"))
+# reading a CSV file from S3 bucket for each year
+parking_violations_issued_2015 <- SparkR::read.df(filepath_2015, header=T, "CSV", na.strings = c("NA","NaN","","#DIV/0!"))
+parking_violations_issued_2016 <- SparkR::read.df(filepath_2016, header=T, "CSV", na.strings = c("NA","NaN","","#DIV/0!"))
+parking_violations_issued_2017 <- SparkR::read.df(filepath_2017, header=T, "CSV", na.strings = c("NA","NaN","","#DIV/0!"))
 
 
-################################################################################################################################################
-
-# examine the size
+################################ Examine the data ####################################
+#------------------------------------------------------------------------------------------
+#1) Find total number of tickets for each year.
+# examine the size 2015
 nrow(parking_violations_issued_2015)
-# 11809233
+#No. of Rows: 11809233
 ncol(parking_violations_issued_2015)
-# 51
-
-##TODO examine for 2016 and 2017 as well
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------
-
-## Find out how many unique states the cars which got parking tickets came from.
+#No. of Columns: 51
+# examine the size 2016
+nrow(parking_violations_issued_2016)
+#No. of Rows: 10626899
+ncol(parking_violations_issued_2016)
+#No. of Columns: 51
+# examine the size 2017
+nrow(parking_violations_issued_2017)
+#No. of Rows: 10803028
+ncol(parking_violations_issued_2017)
+#No. of Columns: 51
+#-----------------------------------------------------------------------------------------
+#2) Find out how many unique states the cars which got parking tickets came from.
 nrow(distinct(select(parking_violations_issued_2015, 'Registration State')))
-## 69
-
-##TODO examine for 2016 and 2017 as well
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------
-
-## Some parking tickets don’t have addresses on them, which is cause for concern. Find out how many such tickets there are.
+## Unique States in 2015: 69
+nrow(distinct(select(parking_violations_issued_2016, 'Registration State')))
+## Unique States in 2016: 68
+nrow(distinct(select(parking_violations_issued_2017, 'Registration State')))
+## Unique States in 2017: 67
+#------------------------------------------------------------------------------------------
+#3) Some parking tickets don’t have addresses on them, which is cause for concern. Find out how many such tickets there are.
 nrow(filter(parking_violations_issued_2015, isNull(parking_violations_issued_2015$`Street Name`) | parking_violations_issued_2015$`Street Name` == '' | isNull(parking_violations_issued_2015$`House Number`) | parking_violations_issued_2015$`House Number` == ''))
-## 1992401
-
-##TODO examine for 2016 and 2017 as well
-
-################################################################################################################################################
+## Parking tickets without address 2015: 1992401
+nrow(filter(parking_violations_issued_2016, isNull(parking_violations_issued_2016$`Street Name`) | parking_violations_issued_2016$`Street Name` == '' | isNull(parking_violations_issued_2016$`House Number`) | parking_violations_issued_2016$`House Number` == ''))
+## Parking tickets without address 2016: 2035232
+nrow(filter(parking_violations_issued_2017, isNull(parking_violations_issued_2017$`Street Name`) | parking_violations_issued_2017$`Street Name` == '' | isNull(parking_violations_issued_2017$`House Number`) | parking_violations_issued_2017$`House Number` == ''))
+## Parking tickets without address 2016: 2035232
+################################ Examine the data ####################################
 
 # For using SQL, you need to create a temporary view
 createOrReplaceTempView(parking_violations_issued_2015, "parking_violations_issued_2015_tbl")
+createOrReplaceTempView(parking_violations_issued_2016, "parking_violations_issued_2016_tbl")
+createOrReplaceTempView(parking_violations_issued_2017, "parking_violations_issued_2017_tbl")
 
-##TODO create temp table for 2016 and 2017 as well
+################################ Aggregation tasks ##########################################
+#--------------------------------------------------------------------------------------------
+#1) How often does each violation code occur? (frequency of violation codes - find the top 5)
 
-#-----------------------------------------------------------------------------------------------------------------------------------------------
-
-## How often does each violation code occur? (frequency of violation codes - find the top 5)
+##Year 2015
 voilationsByCode2015 <- SparkR::sql(
   "SELECT `Violation Code`, COUNT(*) 
   FROM parking_violations_issued_2015_tbl 
   GROUP BY `Violation Code` 
-  ORDER BY COUNT(*) DESC")
+  ORDER BY COUNT(*) DESC LIMIT 5")
 collect(voilationsByCode2015)
+##Resultset 2015
+#1               21  1630912
+#2               38  1418627
+#3               14   988469
+#4               36   839197
+#5               37   795918
 
-##TODO examine for 2016 and 2017 as well
+##Year 2016
+voilationsByCode2016 <- SparkR::sql(
+  "SELECT `Violation Code`, COUNT(*) 
+  FROM parking_violations_issued_2016_tbl 
+  GROUP BY `Violation Code` 
+  ORDER BY COUNT(*) DESC LIMIT 5")
+collect(voilationsByCode2016)
+##Resultset 2016
+#1             21  1531587
+#2             36  1253512
+#3             38  1143696
+#4             14   875614
+#5             37   686610
 
-#-----------------------------------------------------------------------------------------------------------------------------------------------
+##Year 2017
+voilationsByCode2017 <- SparkR::sql(
+  "SELECT `Violation Code`, COUNT(*) 
+  FROM parking_violations_issued_2017_tbl 
+  GROUP BY `Violation Code` 
+  ORDER BY COUNT(*) DESC LIMIT 5")
+collect(voilationsByCode2017)
+##Resultset 2017
+#1             21  1528588
+#2             36  1400614
+#3             38  1062304
+#4             14   893498
+#5             20   618593
 
-## How often does each vehicle body type get a parking ticket? How about the vehicle make? (find the top 5 for both)
+##TODO sample queries, to be removed
+voilationsByCodeYear <- SparkR::sql("
+SELECT Year, `Violation Code`, NoOfViolation FROM (
+    SELECT '2015' AS Year, `Violation Code`, COUNT(*) AS NoOfViolation
+    FROM parking_violations_issued_2015_tbl 
+    GROUP BY `Violation Code` 
+    UNION ALL
+    SELECT '2016' AS Year, `Violation Code`, COUNT(*) AS NoOfViolation
+    FROM parking_violations_issued_2016_tbl 
+    GROUP BY `Violation Code`
+    UNION ALL
+    SELECT '2017' AS Year, `Violation Code`, COUNT(*) AS NoOfViolation
+    FROM parking_violations_issued_2017_tbl 
+    GROUP BY `Violation Code`
+) AS tbl ORDER BY NoOfViolation DESC LIMIT 5")
+collect(voilationsByCodeYear)
+#1 2015             21       1630912
+#2 2016             21       1531587
+#3 2015             38       1418627
+#4 2017             21       1383057
+#5 2016             36       1253512
+
+voilationsByCode <- SparkR::sql("
+SELECT `Violation Code`, SUM(NoOfViolation) AS NoOfViolation FROM (
+    SELECT `Violation Code`, COUNT(*) AS NoOfViolation
+    FROM parking_violations_issued_2015_tbl 
+    GROUP BY `Violation Code` 
+    UNION ALL
+    SELECT `Violation Code`, COUNT(*) AS NoOfViolation
+    FROM parking_violations_issued_2016_tbl 
+    GROUP BY `Violation Code`
+    UNION ALL
+    SELECT `Violation Code`, COUNT(*) AS NoOfViolation
+    FROM parking_violations_issued_2017_tbl 
+    GROUP BY `Violation Code`
+) AS tbl 
+GROUP BY `Violation Code`
+ORDER BY NoOfViolation DESC")
+collect(voilationsByCode)
+##TODO sample queries to be removed
+
+#-------------------------------------------------------------------------------------------------------------------
+#2) How often does each vehicle body type get a parking ticket? How about the vehicle make? (find the top 5 for both)
+
+##Violation By Body Type
+##Year 2015
 voilationsByBodyType2015 <- SparkR::sql(
   "SELECT `Vehicle Body Type`, COUNT(*) 
   FROM parking_violations_issued_2015_tbl 
@@ -77,15 +164,48 @@ voilationsByBodyType2015 <- SparkR::sql(
   ORDER BY COUNT(*) DESC 
   LIMIT 5")
 collect(voilationsByBodyType2015)
+#Violation By Body Type - 2015
+#1              SUBN  3729346
+#2              4DSD  3340014
+#3               VAN  1709091
+#4              DELV   892781
+#5               SDN   524596
 
-## 1              SUBN  3729346
-## 2              4DSD  3340014
-## 3               VAN  1709091
-## 4              DELV   892781
-## 5               SDN   524596
+##Year 2016
+voilationsByBodyType2016 <- SparkR::sql(
+  "SELECT `Vehicle Body Type`, COUNT(*) 
+  FROM parking_violations_issued_2016_tbl 
+  GROUP BY `Vehicle Body Type` 
+  ORDER BY COUNT(*) DESC 
+  LIMIT 5")
+collect(voilationsByBodyType2016)
+#Violation By Body Type - 2016
+#1              SUBN  3466037
+#2              4DSD  2992107
+#3               VAN  1518303
+#4              DELV   755282
+#5               SDN   424043
 
-##TODO examine for 2016 and 2017 as well
 
+##Year 2017
+voilationsByBodyType2017 <- SparkR::sql(
+  "SELECT `Vehicle Body Type`, COUNT(*) 
+  FROM parking_violations_issued_2017_tbl 
+  GROUP BY `Vehicle Body Type` 
+  ORDER BY COUNT(*) DESC 
+  LIMIT 5")
+collect(voilationsByBodyType2017)
+#Violation By Body Type - 2017
+1              SUBN  3719802
+2              4DSD  3082020
+3               VAN  1411970
+4              DELV   687330
+5               SDN   438191
+
+
+
+##Violation By Vehicle Make
+##Year 2015
 voilationsByMake2015 <- SparkR::sql(
   "SELECT `Vehicle Make`, COUNT(*) 
   FROM parking_violations_issued_2015_tbl 
@@ -93,22 +213,48 @@ voilationsByMake2015 <- SparkR::sql(
   ORDER BY COUNT(*) DESC 
   LIMIT 5")
 collect(voilationsByMake2015)
+#Violation By Vehicle Make - 2015
+#1         FORD  1521874
+#2        TOYOT  1217087
+#3        HONDA  1102614
+#4        NISSA   908783
+#5        CHEVR   897845
 
-## 1         FORD  1521874
-## 2        TOYOT  1217087
-## 3        HONDA  1102614
-## 4        NISSA   908783
-## 5        CHEVR   897845
+##Year 2016
+voilationsByMake2016 <- SparkR::sql(
+  "SELECT `Vehicle Make`, COUNT(*) 
+  FROM parking_violations_issued_2016_tbl 
+  GROUP BY `Vehicle Make` 
+  ORDER BY COUNT(*) DESC 
+  LIMIT 5")
+collect(voilationsByMake2016)
+#Violation By Vehicle Make - 2016
+1         FORD  1324774
+2        TOYOT  1154790
+3        HONDA  1014074
+4        NISSA   834833
+5        CHEVR   759663
 
+##Year 2017
+voilationsByMake2017 <- SparkR::sql(
+  "SELECT `Vehicle Make`, COUNT(*) 
+  FROM parking_violations_issued_2017_tbl 
+  GROUP BY `Vehicle Make` 
+  ORDER BY COUNT(*) DESC 
+  LIMIT 5")
+collect(voilationsByMake2017)
+#Violation By Vehicle Make - 2017
+1         FORD  1280958
+2        TOYOT  1211451
+3        HONDA  1079238
+4        NISSA   918590
+5        CHEVR   714655
 
-##TODO examine for 2016 and 2017 as well
+#-------------------------------------------------------------------------------------------------------------------
+#3) A precinct is a police station that has a certain zone of the city under its command. Find the (5 highest) frequencies of:
+####1) Violating Precincts (this is the precinct of the zone where the violation occurred)
 
-#-----------------------------------------------------------------------------------------------------------------------------------------------
-
-## A precinct is a police station that has a certain zone of the city under its command. Find the (5 highest) frequencies of:
-## Violating Precincts (this is the precinct of the zone where the violation occurred)
-## Issuing Precincts (this is the precinct that issued the ticket)
-
+#Year - 2015
 voilationsByViolatingPrecincts2015 <- SparkR::sql(
   "SELECT `Violation Precinct`, COUNT(*) 
   FROM parking_violations_issued_2015_tbl 
@@ -116,17 +262,46 @@ voilationsByViolatingPrecincts2015 <- SparkR::sql(
   ORDER BY COUNT(*) DESC
   LIMIT 5")
 collect(voilationsByViolatingPrecincts2015)
+#Violation Precinct - 2015
+1                  0  1799170
+2                 19   598351
+3                 18   427510
+4                 14   409064
+5                  1   329009
 
-## 1                    0  1799170
-## 2                   19   598351
-## 3                   18   427510
-## 4                   14   409064
-## 5                    1   329009
+#Year - 2016
+voilationsByViolatingPrecincts2016 <- SparkR::sql(
+  "SELECT `Violation Precinct`, COUNT(*) 
+  FROM parking_violations_issued_2016_tbl 
+  GROUP BY `Violation Precinct` 
+  ORDER BY COUNT(*) DESC
+  LIMIT 5")
+collect(voilationsByViolatingPrecincts2016)
+#Violation Precinct - 2016
+#1                  0  1868655
+#2                 19   554465
+#3                 18   331704
+#4                 14   324467
+#5                  1   303850
 
-##TODO examine for 2016 and 2017 as well
+#Year - 2017
+voilationsByViolatingPrecincts2017 <- SparkR::sql(
+  "SELECT `Violation Precinct`, COUNT(*) 
+  FROM parking_violations_issued_2017_tbl 
+  GROUP BY `Violation Precinct` 
+  ORDER BY COUNT(*) DESC
+  LIMIT 5")
+collect(voilationsByViolatingPrecincts2017)
+#Violation Precinct - 2017
+#1                  0  2072400
+#2                 19   535671
+#3                 14   352450
+#4                  1   331810
+#5                 18   306920
 
-#-----------------------------------------------------------------------------------------------------------------------------------------------
 
+####2) Issuing Precincts (this is the precinct that issued the ticket)
+#Year - 2015
 voilationsByIssuerPrecincts2015 <- SparkR::sql(
   "SELECT `Issuer Precinct`, COUNT(*) 
   FROM parking_violations_issued_2015_tbl 
@@ -134,19 +309,47 @@ voilationsByIssuerPrecincts2015 <- SparkR::sql(
   ORDER BY COUNT(*) DESC
   LIMIT 5")
 collect(voilationsByIssuerPrecincts2015)
+#Issuer Precinct - 2015
+#1                 0  2037745
+#2                19   579998
+#3                18   417329
+#4                14   392922
+#5                 1   318778
 
-## 1                 0  2037745
-## 2                19   579998
-## 3                18   417329
-## 4                14   392922
-## 5                 1   318778
+#Year - 2016
+voilationsByIssuerPrecincts2016 <- SparkR::sql(
+  "SELECT `Issuer Precinct`, COUNT(*) 
+  FROM parking_violations_issued_2016_tbl 
+  GROUP BY `Issuer Precinct` 
+  ORDER BY COUNT(*) DESC
+  LIMIT 5")
+collect(voilationsByIssuerPrecincts2016)
+#Issuer Precinct - 2016
+#1               0  2140274
+#2              19   540569
+#3              18   323132
+#4              14   315311
+#5               1   295013
 
-##TODO examine for 2016 and 2017 as well
+#Year - 2017
+voilationsByIssuerPrecincts2017 <- SparkR::sql(
+  "SELECT `Issuer Precinct`, COUNT(*) 
+  FROM parking_violations_issued_2017_tbl 
+  GROUP BY `Issuer Precinct` 
+  ORDER BY COUNT(*) DESC
+  LIMIT 5")
+collect(voilationsByIssuerPrecincts2017)
+#Issuer Precinct - 2017
+#1               0  2388479
+#2              19   521513
+#3              14   344977
+#4               1   321170
+#5              18   296553
 
-#-----------------------------------------------------------------------------------------------------------------------------------------------
 
-## Find the violation code frequency across 3 precincts which have issued the most number of tickets - do these precinct zones have an exceptionally high frequency of certain violation codes? Are these codes common across precincts?
-
+#-----------------------------------------------------------------------------------------------------------------------------------------
+#4) Find the violation code frequency across 3 precincts which have issued the most number of tickets - do these precinct zones have an exceptionally high frequency of certain violation codes? Are these codes common across precincts?
+#Year 2015
 voilationsByViolatingPrecinctsAndVoilationCodes2015 <- SparkR::sql(
   "SELECT `Violation Precinct`, `Violation Code`, COUNT(*) AS COUNT
   FROM parking_violations_issued_2015_tbl 
@@ -158,10 +361,38 @@ voilationsByViolatingPrecinctsAndVoilationCodes2015 <- SparkR::sql(
     LIMIT 3)
   GROUP BY `Violation Precinct`, `Violation Code`
   ORDER BY `Violation Precinct`, COUNT DESC")
-
 collect(voilationsByViolatingPrecinctsAndVoilationCodes2015)
+#Resultset 2015
 
-##TODO examine for 2016 and 2017 as well
+#Year 2016
+voilationsByViolatingPrecinctsAndVoilationCodes2016 <- SparkR::sql(
+  "SELECT `Violation Precinct`, `Violation Code`, COUNT(*) AS COUNT
+  FROM parking_violations_issued_2016_tbl 
+  WHERE `Violation Precinct` IN (
+    SELECT `Violation Precinct` 
+    FROM parking_violations_issued_2016_tbl 
+    GROUP BY `Violation Precinct` 
+    ORDER BY COUNT(*) DESC 
+    LIMIT 3)
+  GROUP BY `Violation Precinct`, `Violation Code`
+  ORDER BY `Violation Precinct`, COUNT DESC")
+collect(voilationsByViolatingPrecinctsAndVoilationCodes2016)
+#Resultset 2016
+
+#Year 2017
+voilationsByViolatingPrecinctsAndVoilationCodes2017 <- SparkR::sql(
+  "SELECT `Violation Precinct`, `Violation Code`, COUNT(*) AS COUNT
+  FROM parking_violations_issued_2017_tbl 
+  WHERE `Violation Precinct` IN (
+    SELECT `Violation Precinct` 
+    FROM parking_violations_issued_2017_tbl 
+    GROUP BY `Violation Precinct` 
+    ORDER BY COUNT(*) DESC 
+    LIMIT 3)
+  GROUP BY `Violation Precinct`, `Violation Code`
+  ORDER BY `Violation Precinct`, COUNT DESC")
+collect(voilationsByViolatingPrecinctsAndVoilationCodes2017)
+#Resultset 2017
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------
 
