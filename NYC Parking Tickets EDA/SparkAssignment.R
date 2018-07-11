@@ -380,3 +380,30 @@ collect(top3VoilationCodes2015)
 
 ## TODO examine for 2016 and 2017 as well
 #-----------------------------------------------------------------------------------------------------------------------------------------------
+
+## TODO: Please refer the excel file ParkingTicketsCosts where avg is computed and complete this query
+revenueByVoilationCodes <- SparkR::sql(
+  "SELECT `Violation Code`,
+  SUM(
+  CASE
+    WHEN (CAST(`Violation Code` AS INT) >= 1 AND CAST(`Violation Code` AS INT) <= 5)
+      OR (CAST(`Violation Code` AS INT) >= 8 AND CAST(`Violation Code` AS INT) <= 11)
+      OR (CAST(`Violation Code` AS INT) >= 13 AND CAST(`Violation Code` AS INT) <= 15)
+      OR (CAST(`Violation Code` AS INT) >= 18 AND CAST(`Violation Code` AS INT) <= 19)
+      OR (CAST(`Violation Code` AS INT) >= 25 AND CAST(`Violation Code` AS INT) <= 26)
+      OR (CAST(`Violation Code` AS INT) >= 29 AND CAST(`Violation Code` AS INT) <= 31)
+      OR CAST(`Violation Code` AS INT) = 40 OR CAST(`Violation Code` AS INT) = 59 OR CAST(`Violation Code` AS INT) = 79 
+      OR (CAST(`Violation Code` AS INT) >= 45 AND CAST(`Violation Code` AS INT) <= 48)
+      OR (CAST(`Violation Code` AS INT) >= 50 AND CAST(`Violation Code` AS INT) <= 56)
+      THEN 515
+    WHEN CAST(`Violation Code` AS INT) = 7
+      THEN 50
+  END
+  ) AS Revenue
+  FROM parking_violations_issued_2015_tbl
+  GROUP BY
+  `Violation Code`
+  ORDER BY `Violation Code`, Revenue DESC"
+)
+
+collect(revenueByVoilationCodes)
