@@ -1160,29 +1160,95 @@ collect(top3VoilationCodes2017)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------
 
-## TODO: Please refer the excel file ParkingTicketsCosts where avg is computed and complete this query
-revenueByVoilationCodes <- SparkR::sql(
-  "SELECT `Violation Code`,
-  SUM(
-  CASE
-    WHEN (CAST(`Violation Code` AS INT) >= 1 AND CAST(`Violation Code` AS INT) <= 5)
-      OR (CAST(`Violation Code` AS INT) >= 8 AND CAST(`Violation Code` AS INT) <= 11)
-      OR (CAST(`Violation Code` AS INT) >= 13 AND CAST(`Violation Code` AS INT) <= 15)
-      OR (CAST(`Violation Code` AS INT) >= 18 AND CAST(`Violation Code` AS INT) <= 19)
-      OR (CAST(`Violation Code` AS INT) >= 25 AND CAST(`Violation Code` AS INT) <= 26)
-      OR (CAST(`Violation Code` AS INT) >= 29 AND CAST(`Violation Code` AS INT) <= 31)
-      OR CAST(`Violation Code` AS INT) = 40 OR CAST(`Violation Code` AS INT) = 59 OR CAST(`Violation Code` AS INT) = 79 
-      OR (CAST(`Violation Code` AS INT) >= 45 AND CAST(`Violation Code` AS INT) <= 48)
-      OR (CAST(`Violation Code` AS INT) >= 50 AND CAST(`Violation Code` AS INT) <= 56)
-      THEN 515
-    WHEN CAST(`Violation Code` AS INT) = 7
-      THEN 50
-  END
-  ) AS Revenue
-  FROM parking_violations_issued_2015_tbl
-  GROUP BY
-  `Violation Code`
-  ORDER BY `Violation Code`, Revenue DESC"
-)
 
-collect(revenueByVoilationCodes)
+## The fines collected from all the parking violation constitute a revenue source for the NYC police department. Let’s take an example of estimating that for the 3 most commonly occurring codes.
+
+## Find total occurrences of the 3 most common violation codes
+
+top3VoilationCodes2015 <- SparkR::sql(
+  "SELECT `Violation Code`,
+  COUNT(*) AS COUNT
+  FROM parking_violations_issued_2015_tbl
+  GROUP BY `Violation Code`
+  ORDER BY COUNT(*) DESC
+  LIMIT 3"
+)
+collect(top3VoilationCodes2015)
+#1             21 1501614
+#2             38 1324586
+#3             14  924627
+
+top3VoilationCodes2016 <- SparkR::sql(
+  "SELECT `Violation Code`,
+  COUNT(*) AS COUNT
+  FROM parking_violations_issued_2016_tbl
+  GROUP BY `Violation Code`
+  ORDER BY COUNT(*) DESC
+  LIMIT 3"
+)
+collect(top3VoilationCodes2016)
+#1             21 1531587
+#2             36 1253512
+#3             38 1143696
+
+top3VoilationCodes2017 <- SparkR::sql(
+  "SELECT `Violation Code`,
+  COUNT(*) AS COUNT
+  FROM parking_violations_issued_2017_tbl
+  GROUP BY `Violation Code`
+  ORDER BY COUNT(*) DESC
+  LIMIT 3"
+)
+collect(top3VoilationCodes2017)
+#1             21 1528588
+#2             36 1400614
+#3             38 1062304
+
+#-----------------------------------------------------------------------------------------------
+####Total amount collected for all of the fines. Also code which has the highest total collection.
+
+#Year 15
+TotalRevenue_15 <- SparkR::sql("select Sum(AvgFine) as RevByViolation from parking_violations_issued_2015_tbl V
+                                inner join ViolationFineAmount_tbl VF on V.`Violation Code` = VF.Code")
+collect(TotalRevenue_15)
+#RevByViolation
+#818,170,448
+
+CodeWithHighestCollection_15 <- SparkR::sql("select `Violation Code`, Sum(AvgFine) as RevByViolation from parking_violations_issued_2015_tbl V
+                                inner join ViolationFineAmount_tbl VF on V.`Violation Code` = VF.Code  
+                                 group by `Violation Code` order by RevByViolation desc LIMIT 1")
+collect(CodeWithHighestCollection_15)
+#Violation Code RevByViolation
+#14      113,673,935
+
+#Year 16
+TotalRevenue_16 <- SparkR::sql("select Sum(AvgFine) as RevByViolation from parking_violations_issued_2016_tbl V
+                                inner join ViolationFineAmount_tbl VF on V.`Violation Code` = VF.Code")
+collect(TotalRevenue_16)
+#RevByViolation
+#715,966,840
+
+CodeWithHighestCollection_16 <- SparkR::sql("select `Violation Code`, Sum(AvgFine) as RevByViolation from parking_violations_issued_2016_tbl V
+                                inner join ViolationFineAmount_tbl VF on V.`Violation Code` = VF.Code  
+                                 group by `Violation Code` order by RevByViolation desc LIMIT 1")
+collect(CodeWithHighestCollection_16)
+#Violation Code RevByViolation
+#14      100,695,610
+
+#Year 17
+TotalRevenue_17 <- SparkR::sql("select Sum(AvgFine) as RevByViolation from parking_violations_issued_2017_tbl V
+                                inner join ViolationFineAmount_tbl VF on V.`Violation Code` = VF.Code")
+collect(TotalRevenue_17)
+#RevByViolation
+#732,576,992
+
+CodeWithHighestCollection_17 <- SparkR::sql("select `Violation Code`, Sum(AvgFine) as RevByViolation from parking_violations_issued_2017_tbl V
+                                inner join ViolationFineAmount_tbl VF on V.`Violation Code` = VF.Code  
+                                 group by `Violation Code` order by RevByViolation desc LIMIT 1")
+collect(CodeWithHighestCollection_17)
+#Violation Code RevByViolation
+#14      102,752,270
+
+#What can you intuitively infer from these findings
+#Top Violation by count in 3 years is with code 21 which is "Street Cleaning: No parking where parking is not allowed by sign, street marking or traffic control device."
+#but max revenue is with code 14 which has higher fine for issue "Street Cleaning: No parking where parking is not allowed by sign, street marking or traffic control device."
