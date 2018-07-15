@@ -1213,44 +1213,56 @@ collect(top3VoilationCodes2017)
 ####Total amount collected for all of the fines. Also code which has the highest total collection.
 
 #Year 15
-TotalRevenue_15 <- SparkR::sql("select Sum(AvgFine) as RevByViolation from parking_violations_issued_2015_tbl V
+totalRevenue_15 <- SparkR::sql("select Sum(AvgFine) as RevByViolation 
+                                from parking_violations_issued_2015_tbl V
                                 inner join ViolationFineAmount_tbl VF on V.`Violation Code` = VF.Code")
-collect(TotalRevenue_15)
+collect(totalRevenue_15)
 #RevByViolation
 #758,131,492
 
-CodeWithHighestCollection_15 <- SparkR::sql("select `Violation Code`, Sum(AvgFine) as RevByViolation from parking_violations_issued_2015_tbl V
+codeWithHighestCollection_15 <- SparkR::sql("select `Violation Code`, Sum(AvgFine) as RevByViolation 
+                                from parking_violations_issued_2015_tbl V
                                 inner join ViolationFineAmount_tbl VF on V.`Violation Code` = VF.Code  
-                                 group by `Violation Code` order by RevByViolation desc LIMIT 1")
-collect(CodeWithHighestCollection_15)
+                                group by `Violation Code` 
+                                order by RevByViolation 
+                                desc LIMIT 1")
+collect(codeWithHighestCollection_15)
 #Violation Code RevByViolation
 #14      106,332,105
 
 #Year 16
-TotalRevenue_16 <- SparkR::sql("select Sum(AvgFine) as RevByViolation from parking_violations_issued_2016_tbl V
+totalRevenue_16 <- SparkR::sql("select Sum(AvgFine) as RevByViolation 
+                                from parking_violations_issued_2016_tbl V
                                 inner join ViolationFineAmount_tbl VF on V.`Violation Code` = VF.Code")
-collect(TotalRevenue_16)
+collect(totalRevenue_16)
 #RevByViolation
 #715,966,840
 
-CodeWithHighestCollection_16 <- SparkR::sql("select `Violation Code`, Sum(AvgFine) as RevByViolation from parking_violations_issued_2016_tbl V
+codeWithHighestCollection_16 <- SparkR::sql("select `Violation Code`, Sum(AvgFine) as RevByViolation 
+                                from parking_violations_issued_2016_tbl V
                                 inner join ViolationFineAmount_tbl VF on V.`Violation Code` = VF.Code  
-                                 group by `Violation Code` order by RevByViolation desc LIMIT 1")
-collect(CodeWithHighestCollection_16)
+                                group by `Violation Code` 
+                                order by RevByViolation 
+                                desc LIMIT 1")
+collect(codeWithHighestCollection_16)
 #Violation Code RevByViolation
 #14      100,695,610
 
 #Year 17
-TotalRevenue_17 <- SparkR::sql("select Sum(AvgFine) as RevByViolation from parking_violations_issued_2017_tbl V
+totalRevenue_17 <- SparkR::sql("select Sum(AvgFine) as RevByViolation 
+                                from parking_violations_issued_2017_tbl V
                                 inner join ViolationFineAmount_tbl VF on V.`Violation Code` = VF.Code")
-collect(TotalRevenue_17)
+collect(totalRevenue_17)
 #RevByViolation
 #732,576,992
 
-CodeWithHighestCollection_17 <- SparkR::sql("select `Violation Code`, Sum(AvgFine) as RevByViolation from parking_violations_issued_2017_tbl V
+codeWithHighestCollection_17 <- SparkR::sql("select `Violation Code`, Sum(AvgFine) as RevByViolation 
+                                from parking_violations_issued_2017_tbl V
                                 inner join ViolationFineAmount_tbl VF on V.`Violation Code` = VF.Code  
-                                 group by `Violation Code` order by RevByViolation desc LIMIT 1")
-collect(CodeWithHighestCollection_17)
+                                group by `Violation Code` 
+                                order by RevByViolation 
+                                desc LIMIT 1")
+collect(codeWithHighestCollection_17)
 #Violation Code RevByViolation
 #14      102,752,270
 
