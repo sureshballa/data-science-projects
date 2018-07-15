@@ -4,6 +4,8 @@ filepath_2015 <- paste(bucket_path, "Parking_Violations_Issued_-_Fiscal_Year_201
 filepath_2016 <- paste(bucket_path, "Parking_Violations_Issued_-_Fiscal_Year_2016.csv", sep = "")
 filepath_2017 <- paste(bucket_path, "Parking_Violations_Issued_-_Fiscal_Year_2017.csv", sep = "")
 
+ViolationFineAmount <- SparkR::read.df(filepath_ViolationFineAmount, header=T, "CSV", na.strings = c("NA","NaN","","#DIV/0!"))
+
 ## IIITB - Group_Facilitator_RollNo: DDA1730041
 ## Team:
 ## 1) Fayiz Mayam Veetil
@@ -22,6 +24,8 @@ sparkR.session(master='local')
 parking_violations_issued_2015 <- SparkR::read.df(filepath_2015, header=T, "CSV", na.strings = c("NA","NaN","","#DIV/0!"))
 parking_violations_issued_2016 <- SparkR::read.df(filepath_2016, header=T, "CSV", na.strings = c("NA","NaN","","#DIV/0!"))
 parking_violations_issued_2017 <- SparkR::read.df(filepath_2017, header=T, "CSV", na.strings = c("NA","NaN","","#DIV/0!"))
+
+createOrReplaceTempView(ViolationFineAmount, "ViolationFineAmount_tbl")
 
 # For using SQL, you need to create a temporary view
 createOrReplaceTempView(parking_violations_issued_2015, "parking_violations_issued_2015_tbl")
