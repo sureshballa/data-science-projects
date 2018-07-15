@@ -434,13 +434,16 @@ collect(voilationsByViolatingPrecinctsAndVoilationCodes2017)
 #other anlysis are explained in the presentation files
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------
-
+#Q5))))
 ## You’d want to find out the properties of parking violations across different times of the day:
 ## The Violation Time field is specified in a strange format. Find a way to make this into a time attribute that you can use to divide into groups.
 ## Find a way to deal with missing values, if any.
 ## Divide 24 hours into 6 equal discrete bins of time. The intervals you choose are at your discretion. For each of these groups, find the 3 most commonly occurring violations
 ## Now, try another direction. For the 3 most commonly occurring violation codes, find the most common times of day (in terms of the bins from the previous part)
 
+
+## The Violation Time field is specified in a strange format. Find a way to make this into a time attribute that you can use to divide into groups.
+## Find a way to deal with missing values, if any.
 ## Lets check missing values
 #Year 2015
 voilationsNullsPercentageForEachColumns2015 <- SparkR::sql(
@@ -610,10 +613,13 @@ collect(voilationsNullsPercentageForEachColumns2017)
 
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------
-##TODO: Please check
 ##TODO: What should we do to impute missing values
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------
+
+##c Divide 24 hours into 6 equal discrete bins of time. The intervals you choose are at your discretion. For each of these groups, find the 3 most commonly occurring violations
+
+##NA's in the result sets are kept sepearatley as it's not logical to add them in any of the time bin, unless otherwise specified
 
 voilationsByTimeBins2015 <- SparkR::sql(
   "SELECT COUNT(*) AS COUNT,
@@ -757,8 +763,11 @@ collect(voilationsByTimeBins2017)
 #3    592911     <NA>             14
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------
+##d)	Now, try another direction. For the 3 most commonly occurring violation codes, find the most common times of day (in terms of the bins from 	the previous part)
 
-## TODO - issues in the sub query
+##NA's in the result sets are kept sepearatley as it's not logical to add them in any of the time bin, unless otherwise specified
+
+#Year 2015
 top3VoilationsCodesByTimeBins2015 <- SparkR::sql(
   "SELECT `Violation Code`, COUNT(*) AS COUNT,
   CASE
@@ -774,7 +783,7 @@ top3VoilationsCodesByTimeBins2015 <- SparkR::sql(
     THEN '16-20'
     WHEN CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) >= 8 AND CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) < 12 AND SUBSTRING(`From Hours In Effect`, LENGTH(`From Hours In Effect`), 1)  == 'P'
     THEN '20-24'
-  END AS Time_Bin,
+  END AS Time_Bin
   FROM parking_violations_issued_2015_tbl
   WHERE `Violation Code` IN (
     SELECT `Violation Code`
@@ -787,15 +796,138 @@ top3VoilationsCodesByTimeBins2015 <- SparkR::sql(
   `Violation Code`, Time_Bin
   ORDER BY `Violation Code`, COUNT DESC"
 )
-
 collect(top3VoilationsCodesByTimeBins2015)
-## TODO examine for 2016 and 2017 as well
+#Resultset 2015
+#   Violation Code   COUNT Time_Bin
+#1              14  609248     <NA>
+#2              14  184213      4-8
+#3              14   63510    16-20
+#4              14   32160     8-12
+#5              14   18717    20-24
+#6              14   12861    12-16
+#7              14    3918      0-4
+#8              21 1294084     8-12
+#9              21  103654      4-8
+#10             21   82552     <NA>
+#11             21   18881      0-4
+#12             21    2283    20-24
+#13             21     148    16-20
+#14             21      12    12-16
+#15             38 1245388     8-12
+#16             38   43950      4-8
+#17             38   17080    16-20
+#18             38   13235     <NA>
+#19             38    2474    12-16
+#20             38    2030    20-24
+#21             38     429      0-4
+
+#Year 2016
+top3VoilationsCodesByTimeBins2016 <- SparkR::sql(
+  "SELECT `Violation Code`, COUNT(*) AS COUNT,
+  CASE
+    WHEN CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) >= 0 AND CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) < 4 AND SUBSTRING(`From Hours In Effect`, LENGTH(`From Hours In Effect`), 1)  == 'A'
+    THEN '0-4'
+    WHEN CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) >= 4 AND CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) < 8 AND SUBSTRING(`From Hours In Effect`, LENGTH(`From Hours In Effect`), 1)  == 'A'
+    THEN '4-8'
+    WHEN CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) >= 8 AND CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) < 12 AND SUBSTRING(`From Hours In Effect`, LENGTH(`From Hours In Effect`), 1)  == 'A'
+    THEN '8-12'
+    WHEN CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) >= 0 AND CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) < 4 AND SUBSTRING(`From Hours In Effect`, LENGTH(`From Hours In Effect`), 1)  == 'P'
+    THEN '12-16'
+    WHEN CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) >= 4 AND CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) < 8 AND SUBSTRING(`From Hours In Effect`, LENGTH(`From Hours In Effect`), 1)  == 'P'
+    THEN '16-20'
+    WHEN CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) >= 8 AND CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) < 12 AND SUBSTRING(`From Hours In Effect`, LENGTH(`From Hours In Effect`), 1)  == 'P'
+    THEN '20-24'
+  END AS Time_Bin
+  FROM parking_violations_issued_2016_tbl
+  WHERE `Violation Code` IN (
+    SELECT `Violation Code`
+    FROM parking_violations_issued_2016_tbl
+    GROUP BY `Violation Code`
+    ORDER BY COUNT(*) DESC
+    LIMIT 3
+  )
+  GROUP BY
+  `Violation Code`, Time_Bin
+  ORDER BY `Violation Code`, COUNT DESC"
+)
+collect(top3VoilationsCodesByTimeBins2016)
+#Resultset 2016
+#   Violation Code   COUNT Time_Bin
+#1              21 1314774     8-12
+#2              21  110287      4-8
+#3              21   84819     <NA>
+#4              21   19662      0-4
+#5              21    1903    20-24
+#6              21     137    16-20
+#7              21       5    12-16
+#8              36 1253512     <NA>
+#9              38 1076854     8-12
+#10             38   35880      4-8
+#11             38   13924    16-20
+#12             38   12013     <NA>
+#13             38    2725    12-16
+#14             38    1831    20-24
+#15             38     469      0-4
+
+#Year 2017
+top3VoilationsCodesByTimeBins2017 <- SparkR::sql(
+  "SELECT `Violation Code`, COUNT(*) AS COUNT,
+  CASE
+    WHEN CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) >= 0 AND CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) < 4 AND SUBSTRING(`From Hours In Effect`, LENGTH(`From Hours In Effect`), 1)  == 'A'
+    THEN '0-4'
+    WHEN CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) >= 4 AND CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) < 8 AND SUBSTRING(`From Hours In Effect`, LENGTH(`From Hours In Effect`), 1)  == 'A'
+    THEN '4-8'
+    WHEN CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) >= 8 AND CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) < 12 AND SUBSTRING(`From Hours In Effect`, LENGTH(`From Hours In Effect`), 1)  == 'A'
+    THEN '8-12'
+    WHEN CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) >= 0 AND CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) < 4 AND SUBSTRING(`From Hours In Effect`, LENGTH(`From Hours In Effect`), 1)  == 'P'
+    THEN '12-16'
+    WHEN CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) >= 4 AND CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) < 8 AND SUBSTRING(`From Hours In Effect`, LENGTH(`From Hours In Effect`), 1)  == 'P'
+    THEN '16-20'
+    WHEN CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) >= 8 AND CAST(SUBSTRING(`From Hours In Effect`, 0, 2) AS INT) < 12 AND SUBSTRING(`From Hours In Effect`, LENGTH(`From Hours In Effect`), 1)  == 'P'
+    THEN '20-24'
+  END AS Time_Bin
+  FROM parking_violations_issued_2017_tbl
+  WHERE `Violation Code` IN (
+    SELECT `Violation Code`
+    FROM parking_violations_issued_2017_tbl
+    GROUP BY `Violation Code`
+    ORDER BY COUNT(*) DESC
+    LIMIT 3
+  )
+  GROUP BY
+  `Violation Code`, Time_Bin
+  ORDER BY `Violation Code`, COUNT DESC"
+)
+collect(top3VoilationsCodesByTimeBins2017)
+#Resultset 2017
+#   Violation Code   COUNT Time_Bin
+#1              21 1298898     8-12
+#2              21  114804      4-8
+#3              21   89317     <NA>
+#4              21   22860      0-4
+#5              21    2441    20-24
+#6              21     232    16-20
+#7              21      36    12-16
+#8              36 1400614     <NA>
+#9              38  999735     8-12
+#10             38   31931      4-8
+#11             38   12386    16-20
+#12             38   12341     <NA>
+#13             38    3811    12-16
+#14             38    1554    20-24
+#15             38     546      0-4
+
+
+
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------
-
+#6)))
 ## Let’s try and find some seasonality in this data
 ## First, divide the year into some number of seasons, and find frequencies of tickets for each season.
 ## Then, find the 3 most common violations for each of these season
+
+## Let’s try and find some seasonality in this data
+#Year 2016
 voilationsBySeason2015 <- SparkR::sql(
   "SELECT
   CASE
@@ -875,6 +1007,8 @@ collect(voilationsBySeason2017)
 #4 Spring 2880687
 #-----------------------------------------------------------------------------------------------------------------------------------------------
 
+## Then, find the 3 most common violations for each of these season
+#Year 2015
 top3VoilationsCodeForEachSeason2015 <- SparkR::sql(
   "SELECT
   CASE
@@ -895,6 +1029,7 @@ top3VoilationsCodeForEachSeason2015 <- SparkR::sql(
   ORDER BY Season, COUNT DESC"
 )
 collect(top3VoilationsCodeForEachSeason2015)
+#Resultset 2015
 #1     Fall             21 351423
 #2     Fall             38 326702
 #3     Fall             14 232339
@@ -908,6 +1043,7 @@ collect(top3VoilationsCodeForEachSeason2015)
 #301 Winter             21 253214
 #302 Winter             14 193337
 
+#Year 2016
 top3VoilationsCodeForEachSeason2016 <- SparkR::sql(
   "SELECT
   CASE
@@ -927,6 +1063,7 @@ top3VoilationsCodeForEachSeason2016 <- SparkR::sql(
   GROUP BY Season, `Violation Code` 
   ORDER BY Season, COUNT DESC"
 )
+#Resultset 2016
 collect(top3VoilationsCodeForEachSeason2016)
 #1     Fall             36 438320
 #2     Fall             21 395357
@@ -941,6 +1078,7 @@ collect(top3VoilationsCodeForEachSeason2016)
 #301 Winter             36 314765
 #302 Winter             38 268421
 
+#Year 2017
 top3VoilationsCodeForEachSeason2017 <- SparkR::sql(
   "SELECT
   CASE
@@ -961,6 +1099,7 @@ top3VoilationsCodeForEachSeason2017 <- SparkR::sql(
   ORDER BY Season, COUNT DESC"
 )
 collect(top3VoilationsCodeForEachSeason2017)
+#Resultset 2017
 #1     Fall             36 456046
 #2     Fall             21 357479
 #3     Fall             38 283828
