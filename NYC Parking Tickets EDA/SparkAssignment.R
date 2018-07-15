@@ -4,7 +4,7 @@ filepath_2015 <- paste(bucket_path, "Parking_Violations_Issued_-_Fiscal_Year_201
 filepath_2016 <- paste(bucket_path, "Parking_Violations_Issued_-_Fiscal_Year_2016.csv", sep = "")
 filepath_2017 <- paste(bucket_path, "Parking_Violations_Issued_-_Fiscal_Year_2017.csv", sep = "")
 
-ViolationFineAmount <- SparkR::read.df(filepath_ViolationFineAmount, header=T, "CSV", na.strings = c("NA","NaN","","#DIV/0!"))
+filepath_ViolationFineAmount <- paste(bucket_path, "ViolationFineAmount.csv", sep = "")
 
 ## IIITB - Group_Facilitator_RollNo: DDA1730041
 ## Team:
@@ -25,13 +25,14 @@ parking_violations_issued_2015 <- SparkR::read.df(filepath_2015, header=T, "CSV"
 parking_violations_issued_2016 <- SparkR::read.df(filepath_2016, header=T, "CSV", na.strings = c("NA","NaN","","#DIV/0!"))
 parking_violations_issued_2017 <- SparkR::read.df(filepath_2017, header=T, "CSV", na.strings = c("NA","NaN","","#DIV/0!"))
 
-createOrReplaceTempView(ViolationFineAmount, "ViolationFineAmount_tbl")
+ViolationFineAmount <- SparkR::read.df(filepath_ViolationFineAmount, header=T, "CSV", na.strings = c("NA","NaN","","#DIV/0!"))
 
 # For using SQL, you need to create a temporary view
 createOrReplaceTempView(parking_violations_issued_2015, "parking_violations_issued_2015_tbl")
 createOrReplaceTempView(parking_violations_issued_2016, "parking_violations_issued_2016_tbl")
 createOrReplaceTempView(parking_violations_issued_2017, "parking_violations_issued_2017_tbl")
 
+createOrReplaceTempView(ViolationFineAmount, "ViolationFineAmount_tbl")
 
 ################################ Examine the data ####################################
 #------------------------------------------------------------------------------------------
@@ -100,7 +101,7 @@ distictSummons2016 <- SparkR::sql(
   "SELECT count(distinct `Summons Number`)
   FROM parking_violations_issued_2016_tbl")
 collect(distictSummons2016)
-#distinct summons number = 10626899 which is not matching with actual number of rows in data file
+#distinct summons number = 10626899 which is matching with actual number of rows in data file
 #seems no duplicate records in 2016 data set so further check required
 
 #Check for distinct Summons Number in the 2017 dataset
@@ -108,7 +109,7 @@ distictSummons2017 <- SparkR::sql(
   "SELECT count(distinct `Summons Number`)
   FROM parking_violations_issued_2017_tbl")
 collect(distictSummons2017)
-#distinct summons number = 10803028  which is not matching with actual number of rows in data file
+#distinct summons number = 10803028  which is matching with actual number of rows in data file
 #seems no duplicate records in 2017 data set so further check required
 
 #1) Find total number of tickets for each year.
@@ -1216,14 +1217,14 @@ TotalRevenue_15 <- SparkR::sql("select Sum(AvgFine) as RevByViolation from parki
                                 inner join ViolationFineAmount_tbl VF on V.`Violation Code` = VF.Code")
 collect(TotalRevenue_15)
 #RevByViolation
-#818,170,448
+#758,131,492
 
 CodeWithHighestCollection_15 <- SparkR::sql("select `Violation Code`, Sum(AvgFine) as RevByViolation from parking_violations_issued_2015_tbl V
                                 inner join ViolationFineAmount_tbl VF on V.`Violation Code` = VF.Code  
                                  group by `Violation Code` order by RevByViolation desc LIMIT 1")
 collect(CodeWithHighestCollection_15)
 #Violation Code RevByViolation
-#14      113,673,935
+#14      106,332,105
 
 #Year 16
 TotalRevenue_16 <- SparkR::sql("select Sum(AvgFine) as RevByViolation from parking_violations_issued_2016_tbl V
