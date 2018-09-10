@@ -615,11 +615,6 @@ voilationsNullsPercentageForEachColumns2017 <- SparkR::sql(
   FROM parking_violations_issued_2017_tbl"
 )
 collect(voilationsNullsPercentageForEachColumns2017)
-
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------
-##TODO: What should we do to impute missing values
-
 #-----------------------------------------------------------------------------------------------------------------------------------------------
 
 ##c Divide 24 hours into 6 equal discrete bins of time. The intervals you choose are at your discretion. For each of these groups, find the 3 most commonly occurring violations
