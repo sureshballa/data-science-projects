@@ -91,6 +91,9 @@ plotDen <- function(data_in, i){
 ## Load data sets
 
 consumerElectronicsData <- read.csv("ConsumerElectronics.csv", stringsAsFactors = FALSE, encoding = "UTF-8", na.strings = c("NA","NaN","","#DIV/0!"))
+budgetAllocations <- read.csv("budget_allocation.csv", stringsAsFactors = FALSE, encoding = "UTF-8", na.strings = c("NA","NaN","","#DIV/0!"))
+
+colnames(budgetAllocations)[1] <- "Year"
 
 ## End of load data sets
 ################################################################################################################################################
@@ -197,3 +200,40 @@ doPlots(cbind(master_frame_categorical_variables_only, gvm = consumerElectronics
 
 aggregateAndDoPlots(cbind(master_frame_categorical_variables_only, gmv = consumerElectronicsDataForAnalysis$gmv), fun = plotBarForGmv, ii = 1:ncol(master_frame_categorical_variables_only), ncol = 2)
 
+################################################################################################################################################
+
+## Lets do EDA against marketting budget
+
+consumerElectronicsDataForAnalysis$order_date <- as.Date(consumerElectronicsDataForAnalysis$order_date)
+consumerElectronicsDataForAnalysis$week <- format(consumerElectronicsDataForAnalysis$order_date,"%W")
+consumerElectronicsDataForAnalysis$day <- format(consumerElectronicsDataForAnalysis$order_date,"%d")
+
+consumerElectronicsDataForAnalysisDayAggregation <- consumerElectronicsDataForAnalysis %>% group_by(Year, Month, day) %>% summarise(n=n(), revenue=sum(gmv, na.rm=TRUE), subCategories = paste(unique(product_analytic_sub_category), collapse = ","), week = head(week, 1))
+
+daysInMonth <- consumerElectronicsDataForAnalysisDayAggregation %>% group_by(Year, Month) %>% summarise(days=n())
+budgetByMonths <- merge(daysInMonth, budgetAllocations, by = c("Year", "Month"))
+
+computeInvestment <- function(record) {
+  year <- as.numeric(record[1])
+  month <- as.numeric(record[2])
+  investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Total.Investment
+  days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
+  return(investment/days)
+}
+
+consumerElectronicsDataForAnalysisDayAggregation$investment <- apply(consumerElectronicsDataForAnalysisDayAggregation, 1, computeInvestment)
+consumerElectronicsDataForAnalysisDayAggregation$investment <-consumerElectronicsDataForAnalysisDayAggregation$investment * 10000000
+
+
+weeklyRevenueVsInvestment <- consumerElectronicsDataForAnalysisDayAggregation %>% group_by(Year, week) %>% summarise(revenue = sum(revenue, na.rm=TRUE), investment = sum(investment, na.rm=TRUE))
+temp <- as.data.frame((weeklyRevenueVsInvestment %>% filter(Year == 2015))[c(2,3,4)])
+melted <- melt(temp, id.vars='week')
+
+ggplot(melted, aes(x=week, y=value, fill=variable)) +
+  geom_bar(stat='identity', position='dodge')
+
+temp2 <- as.data.frame((weeklyRevenueVsInvestment %>% filter(Year == 2016))[c(2,3,4)])
+melted2 <- melt(temp, id.vars='week')
+
+ggplot(melted2, aes(x=week, y=value, fill=variable)) +
+  geom_bar(stat='identity', position='dodge')
