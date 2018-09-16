@@ -76,6 +76,18 @@ aggregateAndDoPlots <- function(data_in, fun, ii, ncol=3) {
   do.call("grid.arrange", c(pp, ncol=ncol))
 }
 
+plotCorrAgainstGmv <- function(data_in, i){
+  data <- data.frame(x = data_in[[i]], gmv = data_in$gmv)
+  p <- ggplot(data, aes(x = x, y = gmv)) + geom_point(shape = 1, na.rm = TRUE) + geom_smooth(method = lm ) + xlab(paste0(colnames(data_in)[i], '\n', 'R-Squared: ', round(cor(data_in[[i]], data$gmv, use = 'complete.obs'), 2))) + theme_light()
+  return(suppressWarnings(p))
+}
+
+plotCorrAgainstRevenueGmv <- function(data_in, i){
+  data <- data.frame(x = data_in[[i]], gmv_revenue = data_in$gmv_revenue)
+  p <- ggplot(data, aes(x = x, y = gmv_revenue)) + geom_point(shape = 1, na.rm = TRUE) + geom_smooth(method = lm ) + xlab(paste0(colnames(data_in)[i], '\n', 'R-Squared: ', round(cor(data_in[[i]], data$gmv_revenue, use = 'complete.obs'), 2))) + theme_light()
+  return(suppressWarnings(p))
+}
+
 ## Reusable function to plot denisity for given data set and ith column
 plotDen <- function(data_in, i){
   data <- data.frame(x=data_in[[i]])
@@ -189,6 +201,11 @@ consumerElectronicsDataForAnalysisWithDummayVariables <- data.frame(predict(dmy,
 correlationMatrix <- cor(consumerElectronicsDataForAnalysisWithDummayVariables, use = "pairwise.complete.obs")
 corrplot(correlationMatrix, method = "color", type = "lower", order = "FPC", tl.cex = 0.6)
 
+## Plot scatter plot for variables that have high correlation.
+highcorr <- c(names(correlationMatrix[,'gmv'])[which(correlationMatrix[,'gmv'] > 0.5)], names(correlationMatrix[,'gmv'])[which(correlationMatrix[,'gmv'] < -0.2)])
+data_corr <- consumerElectronicsDataForAnalysisWithDummayVariables[,highcorr]
+doPlots(data_corr, fun = plotCorrAgainstGmv, ii = 1:ncol(data_corr))
+
 ## End of Bivariate Analysis
 ################################################################################################################################################
 
@@ -258,6 +275,19 @@ ggplot(melted2, aes(x=week, y=value, fill=variable)) +
 ## Weekly aggregation
 
 weekAggregationSplit1 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(Year, Month, week, gmv_revenue, investment) %>% group_by(Year, Month, week) %>% summarise_all(funs(sum), na.rm = TRUE)
-weekAggregationSplit2 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(-c(gmv_revenue, investment)) %>% group_by(Year, Month, week) %>% summarise_all(funs(mean = mean), na.rm = TRUE)
+weekAggregationSplit2 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(-c(gmv_revenue, investment, day)) %>% group_by(Year, Month, week) %>% summarise_all(funs(mean = mean), na.rm = TRUE)
 
 consumerElectronicsDataForAnalysisWeeklyAggregation <- cbind(weekAggregationSplit1, weekAggregationSplit2)
+
+################################################################################################################################################
+
+## Begin of Bivariate Analysis (with included investment and at week level)
+
+correlationMatrixWeekly <- cor(consumerElectronicsDataForAnalysisWeeklyAggregation, use = "pairwise.complete.obs")
+#corrplot(correlationMatrixWeekly, method = "color", type = "lower", order = "FPC", tl.cex = 0.6)
+
+## Plot scatter plot for variables that have high correlation.
+highcorrWeekly <- c(names(correlationMatrixWeekly[,'gmv_revenue'])[which(correlationMatrixWeekly[,'gmv_revenue'] > 0.5)], names(correlationMatrixWeekly[,'gmv_revenue'])[which(correlationMatrixWeekly[,'gmv_revenue'] < -0.2)])
+data_corr_weekly <- consumerElectronicsDataForAnalysisWeeklyAggregation[,highcorrWeekly]
+doPlots(data_corr_weekly, fun = plotCorrAgainstRevenueGmv, ii = 1:ncol(data_corr_weekly))
+
