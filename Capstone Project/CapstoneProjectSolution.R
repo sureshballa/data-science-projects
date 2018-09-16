@@ -254,3 +254,10 @@ ggplot(melted2, aes(x=week, y=value, fill=variable)) +
   geom_bar(stat='identity', position='dodge')
 
 ################################################################################################################################################
+
+## Weekly aggregation
+
+weekAggregationSplit1 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(Year, Month, week, gmv_revenue, investment) %>% group_by(Year, Month, week) %>% summarise_all(funs(sum), na.rm = TRUE)
+weekAggregationSplit2 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(-c(gmv_revenue, investment)) %>% group_by(Year, Month, week) %>% summarise_all(funs(mean = mean), na.rm = TRUE)
+
+consumerElectronicsDataForAnalysisWeeklyAggregation <- cbind(weekAggregationSplit1, weekAggregationSplit2)
