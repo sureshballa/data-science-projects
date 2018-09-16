@@ -103,7 +103,7 @@ colnames(budgetAllocations)[1] <- "Year"
 consumerElectronicsData$Month <- as.numeric(consumerElectronicsData$Month)
 consumerElectronicsData$Year <- as.numeric(consumerElectronicsData$Year)
 consumerElectronicsDataForAnalysis <- consumerElectronicsData %>% filter((Year == 2015 & Month >= 7) | (Year == 2016 & Month <= 6))
-consumerElectronicsDataForAnalysis <- consumerElectronicsDataForAnalysis %>% filter(product_analytic_sub_category == "GamingAccessory" | product_analytic_sub_category == "CameraAccessory" | product_analytic_sub_category == "HomeAudio")
+##consumerElectronicsDataForAnalysis <- consumerElectronicsDataForAnalysis %>% filter(product_analytic_sub_category == "GamingAccessory" | product_analytic_sub_category == "CameraAccessory" | product_analytic_sub_category == "HomeAudio")
 
 ## Handling of NA's
 NA.proportion <- function(x) mean(is.na(x))
@@ -113,27 +113,23 @@ colSums(is.na(consumerElectronicsDataForAnalysis))
 colMeans(is.na(consumerElectronicsDataForAnalysis))
 barplot(colMeans(is.na(consumerElectronicsDataForAnalysis)))
 
-# gmv, pincode and custid has null values
-
-# md.pattern(consumerElectronicsDataForAnalysis)
-# #Imputing missing values using mice
-# mice_imputes = mice(consumerElectronicsDataForAnalysis, m=4, maxit = 40)
-# mice_imputes$method
-# ## As expected pmm methods have been used
-# consumerElectronicsDataForAnalysis <- complete(mice_imputes)
+## gmv, pincode and custid has null values
+## TODO: Compute gmv for each product group. Ignore, cust id. And also ignore pincode for now (as per mentor)
 
 ## Lets confirm NA's again
 colSums(is.na(consumerElectronicsDataForAnalysis))
 colMeans(is.na(consumerElectronicsDataForAnalysis))
 barplot(colMeans(is.na(consumerElectronicsDataForAnalysis)))
 
-## Error: system is computationally singular: reciprocal condition number = 7.03375e-43
-
 ## No more NA's, we are good
+
+##TODO: check near zero variance after aggregation
 
 ## Remove near zero variance variables which doesnt makese sense (For example, col having only one value is of no use)
 nearZeroVariances <- nearZeroVar(consumerElectronicsDataForAnalysis, saveMetrics = TRUE)
 nearZeroVariances_trues_indexes <- which(nearZeroVariances$nzv == TRUE)
+
+## Units, deliverybdays, deliverycdays and product_analytic_super_category are columns that are near zero variance.
 
 if (length(nearZeroVariances_trues_indexes) > 0) {
   consumerElectronicsDataForAnalysis <- consumerElectronicsDataForAnalysis[, -(nearZeroVariances_trues_indexes)]
@@ -184,7 +180,14 @@ doPlots(master_frame_categorical_variables_only, fun = plotBar, ii = 1:ncol(mast
 
 ## Begin of Bivariate Analysis
 
-correlationMatrix <- cor(master_frame_numerical_variables_only, use = "pairwise.complete.obs")
+##Lets remove columns X.U.FEFF.fsn_id, order_date and product_analytic_vertical for corrrelation plot (because so many products)
+
+consumerElectronicsDataForAnalysisForCorrelation <- subset(consumerElectronicsDataForAnalysis, select = -c(X.U.FEFF.fsn_id, order_date, product_analytic_vertical))
+
+dmy <- dummyVars(" ~ .", data = consumerElectronicsDataForAnalysisForCorrelation, fullRank=T)
+consumerElectronicsDataForAnalysisWithDummayVariables <- data.frame(predict(dmy, newdata = consumerElectronicsDataForAnalysisForCorrelation))
+
+correlationMatrix <- cor(consumerElectronicsDataForAnalysisWithDummayVariables, use = "pairwise.complete.obs")
 corrplot(correlationMatrix, method = "color", type = "lower", order = "FPC", tl.cex = 0.6)
 
 ## End of Bivariate Analysis
@@ -211,7 +214,7 @@ consumerElectronicsDataForAnalysis$day <- format(consumerElectronicsDataForAnaly
 consumerElectronicsDataForAnalysisDayAggregation <- consumerElectronicsDataForAnalysis %>% group_by(Year, Month, day) %>% summarise(n=n(), revenue=sum(gmv, na.rm=TRUE), subCategories = paste(unique(product_analytic_sub_category), collapse = ","), week = head(week, 1))
 
 daysInMonth <- consumerElectronicsDataForAnalysisDayAggregation %>% group_by(Year, Month) %>% summarise(days=n())
-budgetByMonths <- merge(daysInMonth, budgetAllocations, by = c("Year", "Month"))
+budgetByMonths <- merge(daysInMonth, budgetAllocations, by= c("Year", "Month"))
 
 computeInvestment <- function(record) {
   year <- as.numeric(record[1])
@@ -233,7 +236,7 @@ ggplot(melted, aes(x=week, y=value, fill=variable)) +
   geom_bar(stat='identity', position='dodge')
 
 temp2 <- as.data.frame((weeklyRevenueVsInvestment %>% filter(Year == 2016))[c(2,3,4)])
-melted2 <- melt(temp, id.vars='week')
+melted2 <- melt(temp2, id.vars='week')
 
 ggplot(melted2, aes(x=week, y=value, fill=variable)) +
   geom_bar(stat='identity', position='dodge')
