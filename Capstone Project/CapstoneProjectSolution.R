@@ -100,9 +100,13 @@ plotDen <- function(data_in, i){
 ################################################################################################################################################
 
 ## Load data sets
-
-consumerElectronicsData <- read.csv("ConsumerElectronics.csv", stringsAsFactors = FALSE, encoding = "UTF-8", na.strings = c("NA","NaN","","#DIV/0!"))
+#DA Handed the \N for Null values
+consumerElectronicsData <- read.csv("ConsumerElectronics.csv", stringsAsFactors = FALSE, encoding = "UTF-8", na.strings = c("\\N", "NA","NaN","","#DIV/0!"))
 budgetAllocations <- read.csv("budget_allocation.csv", stringsAsFactors = FALSE, encoding = "UTF-8", na.strings = c("NA","NaN","","#DIV/0!"))
+
+#DA Load Sales Event and NPS data
+Salesevents <- read.csv("events_salesdays.csv", stringsAsFactors = FALSE, encoding = "UTF-8", na.strings = c("NA","NaN","","#DIV/0!"))
+NPS <- read.csv("NPS.csv", stringsAsFactors = FALSE, encoding = "UTF-8", na.strings = c("NA","NaN","","#DIV/0!"))
 
 colnames(budgetAllocations)[1] <- "Year"
 
@@ -125,14 +129,16 @@ colMeans(is.na(consumerElectronicsDataForAnalysis))
 barplot(colMeans(is.na(consumerElectronicsDataForAnalysis)))
 
 ## gmv, pincode and custid has null values
-## TODO: Compute gmv for each product group. Ignore, cust id. And also ignore pincode for now (as per mentor)
+#DA: consumerElectronicsDataForAnalysis$gmv is NA for .29%. These records should be excluded from analysis.
+#same records have cust_id as blank
+consumerElectronicsDataForAnalysis <- consumerElectronicsData %>% filter(!is.na(gmv))
 
 ## Lets confirm NA's again
 colSums(is.na(consumerElectronicsDataForAnalysis))
 colMeans(is.na(consumerElectronicsDataForAnalysis))
 barplot(colMeans(is.na(consumerElectronicsDataForAnalysis)))
 
-## No more NA's, we are good
+## No more NA's that we need to worry
 
 ##TODO: check near zero variance after aggregation
 
