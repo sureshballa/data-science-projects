@@ -71,7 +71,6 @@ aggregateAndDoPlots <- function(data_in, fun, ii, ncol=3) {
     p <- ggplot(data_in %>% group_by(grp = data_in[[i]]) %>% summarise(gmv=sum(gmv, na.rm=TRUE), na.rm=T) %>% arrange(desc(gmv)), aes(x=grp, y = gmv)) + 
       xlab(grp) +
       geom_bar(stat = 'identity')
-      ##geom_text(aes(label = ..identity.., y = ..identity..), stat= "identity", vjust = -0.3, position = position_dodge(width=0.9))
     pp <- c(pp, list(p))
   }
   do.call("grid.arrange", c(pp, ncol=ncol))
@@ -193,13 +192,11 @@ corrplot(correlationMatrix, method = "color", type = "lower", order = "FPC", tl.
 ## End of Bivariate Analysis
 ################################################################################################################################################
 
-# Boxplots of numeric variables relative to gvm status
+# Boxplots of numeric variables relative to gvm
 doPlots(cbind(master_frame_categorical_variables_only, gvm = consumerElectronicsDataForAnalysis$gmv), fun = plotBoxWithSegmentsForGVM, ii = 1:ncol(master_frame_categorical_variables_only), ncol = 5)
 
 
 ################################################################################################################################################
-
-##View(consumerElectronicsDataForAnalysis %>% group_by(product_analytic_sub_category) %>% summarise(gmv=sum(gmv, na.rm=TRUE), na.rm=T) %>% arrange(desc(gmv)))
 
 aggregateAndDoPlots(cbind(master_frame_categorical_variables_only, gmv = consumerElectronicsDataForAnalysis$gmv), fun = plotBarForGmv, ii = 1:ncol(master_frame_categorical_variables_only), ncol = 2)
 
@@ -210,6 +207,10 @@ aggregateAndDoPlots(cbind(master_frame_categorical_variables_only, gmv = consume
 consumerElectronicsDataForAnalysis$order_date <- as.Date(consumerElectronicsDataForAnalysis$order_date)
 consumerElectronicsDataForAnalysis$week <- format(consumerElectronicsDataForAnalysis$order_date,"%W")
 consumerElectronicsDataForAnalysis$day <- format(consumerElectronicsDataForAnalysis$order_date,"%d")
+
+## consumerElectronicsDataForAnalysisForAggregation <- subset(consumerElectronicsDataForAnalysis, select = -c(X.U.FEFF.fsn_id, order_date))
+## dmyForAggregation <- dummyVars(" ~ .", data = consumerElectronicsDataForAnalysisForAggregation, fullRank=T)
+## consumerElectronicsDataForAnalysisForAggregationWithDummayVariables <- data.frame(predict(dmyForAggregation, newdata = consumerElectronicsDataForAnalysisForAggregation))
 
 consumerElectronicsDataForAnalysisDayAggregation <- consumerElectronicsDataForAnalysis %>% group_by(Year, Month, day) %>% summarise(n=n(), revenue=sum(gmv, na.rm=TRUE), subCategories = paste(unique(product_analytic_sub_category), collapse = ","), week = head(week, 1))
 
@@ -228,6 +229,11 @@ consumerElectronicsDataForAnalysisDayAggregation$investment <- apply(consumerEle
 consumerElectronicsDataForAnalysisDayAggregation$investment <-consumerElectronicsDataForAnalysisDayAggregation$investment * 10000000
 
 
+################################################################################################################################################
+
+## Side by side analysis of investment and revenue
+## TODO: Updated variable names to have meaning full ones
+
 weeklyRevenueVsInvestment <- consumerElectronicsDataForAnalysisDayAggregation %>% group_by(Year, week) %>% summarise(revenue = sum(revenue, na.rm=TRUE), investment = sum(investment, na.rm=TRUE))
 temp <- as.data.frame((weeklyRevenueVsInvestment %>% filter(Year == 2015))[c(2,3,4)])
 melted <- melt(temp, id.vars='week')
@@ -240,3 +246,5 @@ melted2 <- melt(temp2, id.vars='week')
 
 ggplot(melted2, aes(x=week, y=value, fill=variable)) +
   geom_bar(stat='identity', position='dodge')
+
+################################################################################################################################################
