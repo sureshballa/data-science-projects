@@ -205,12 +205,14 @@ aggregateAndDoPlots(cbind(master_frame_categorical_variables_only, gmv = consume
 ## Lets do EDA against marketting budget
 
 consumerElectronicsDataForAnalysis$order_date <- as.Date(consumerElectronicsDataForAnalysis$order_date)
-consumerElectronicsDataForAnalysis$week <- format(consumerElectronicsDataForAnalysis$order_date,"%W")
-consumerElectronicsDataForAnalysis$day <- format(consumerElectronicsDataForAnalysis$order_date,"%d")
+consumerElectronicsDataForAnalysis$week <- as.numeric(format(consumerElectronicsDataForAnalysis$order_date,"%W"))
+consumerElectronicsDataForAnalysis$day <- as.numeric(format(consumerElectronicsDataForAnalysis$order_date,"%d"))
 
-## consumerElectronicsDataForAnalysisForAggregation <- subset(consumerElectronicsDataForAnalysis, select = -c(X.U.FEFF.fsn_id, order_date))
-## dmyForAggregation <- dummyVars(" ~ .", data = consumerElectronicsDataForAnalysisForAggregation, fullRank=T)
-## consumerElectronicsDataForAnalysisForAggregationWithDummayVariables <- data.frame(predict(dmyForAggregation, newdata = consumerElectronicsDataForAnalysisForAggregation))
+consumerElectronicsDataForAnalysisForAggregation <- subset(consumerElectronicsDataForAnalysis, select = -c(X.U.FEFF.fsn_id, order_date))
+dmyForAggregation <- dummyVars(" ~ .", data = consumerElectronicsDataForAnalysisForAggregation, fullRank=T)
+consumerElectronicsDataForAnalysisForAggregationWithDummayVariables <- data.frame(predict(dmyForAggregation, newdata = consumerElectronicsDataForAnalysisForAggregation))
+
+test <- consumerElectronicsDataForAnalysisForAggregationWithDummayVariables %>% group_by(Year, Month, day) %>% summarise_all(mean, na.rm = TRUE) 
 
 consumerElectronicsDataForAnalysisDayAggregation <- consumerElectronicsDataForAnalysis %>% group_by(Year, Month, day) %>% summarise(n=n(), revenue=sum(gmv, na.rm=TRUE), subCategories = paste(unique(product_analytic_sub_category), collapse = ","), week = head(week, 1))
 
