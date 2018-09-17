@@ -105,8 +105,8 @@ consumerElectronicsData <- read.csv("ConsumerElectronics.csv", stringsAsFactors 
 budgetAllocations <- read.csv("budget_allocation.csv", stringsAsFactors = FALSE, encoding = "UTF-8", na.strings = c("NA","NaN","","#DIV/0!"))
 
 #DA Load Sales Event and NPS data
-Salesevents <- read.csv("events_salesdays.csv", stringsAsFactors = FALSE, encoding = "UTF-8", na.strings = c("NA","NaN","","#DIV/0!"))
-NPS <- read.csv("NPS.csv", stringsAsFactors = FALSE, encoding = "UTF-8", na.strings = c("NA","NaN","","#DIV/0!"))
+salesEventsWeeklyLevel <- read.csv("events_salesdays.csv", stringsAsFactors = FALSE, encoding = "UTF-8", na.strings = c("NA","NaN","","#DIV/0!"))
+npsWeeklyLevel <- read.csv("NPS.csv", stringsAsFactors = FALSE, encoding = "UTF-8", na.strings = c("NA","NaN","","#DIV/0!"))
 
 colnames(budgetAllocations)[1] <- "Year"
 
@@ -231,6 +231,8 @@ consumerElectronicsDataForAnalysis$order_date <- as.Date(consumerElectronicsData
 consumerElectronicsDataForAnalysis$week <- as.numeric(format(consumerElectronicsDataForAnalysis$order_date,"%W"))
 consumerElectronicsDataForAnalysis$day <- as.numeric(format(consumerElectronicsDataForAnalysis$order_date,"%d"))
 
+##test <- merge(consumerElectronicsDataForAnalysis, salesEventsWeeklyLevel, by = c("Year", "Month", "week"), all = TRUE)
+
 consumerElectronicsDataForAnalysisForAggregation <- subset(consumerElectronicsDataForAnalysis, select = -c(X.U.FEFF.fsn_id, order_date))
 dmyForAggregation <- dummyVars(" ~ .", data = consumerElectronicsDataForAnalysisForAggregation, fullRank=T)
 consumerElectronicsDataForAnalysisForAggregationWithDummayVariables <- data.frame(predict(dmyForAggregation, newdata = consumerElectronicsDataForAnalysisForAggregation))
@@ -251,11 +253,91 @@ computeInvestment <- function(record) {
   month <- as.numeric(record[2])
   investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Total.Investment
   days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
-  return(investment/days)
+  return( (investment/days) * 10000000 )
+}
+
+computeTVInvestment <- function(record) {
+  year <- as.numeric(record[1])
+  month <- as.numeric(record[2])
+  investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$TV
+  days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
+  return( (investment/days) * 10000000 )
+}
+
+computeDigitalInvestment <- function(record) {
+  year <- as.numeric(record[1])
+  month <- as.numeric(record[2])
+  investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Digital
+  days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
+  return( (investment/days) * 10000000 )
+}
+
+computeSponsorshipInvestment <- function(record) {
+  year <- as.numeric(record[1])
+  month <- as.numeric(record[2])
+  investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Sponsorship
+  days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
+  return( (investment/days) * 10000000 )
+}
+
+computeContentMarketingInvestment <- function(record) {
+  year <- as.numeric(record[1])
+  month <- as.numeric(record[2])
+  investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Content.Marketing
+  days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
+  return( (investment/days) * 10000000 )
+}
+
+computeOnlinemarketingInvestment <- function(record) {
+  year <- as.numeric(record[1])
+  month <- as.numeric(record[2])
+  investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Online.marketing
+  days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
+  return( (investment/days) * 10000000 )
+}
+
+computeAffiliatesInvestment <- function(record) {
+  year <- as.numeric(record[1])
+  month <- as.numeric(record[2])
+  investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Affiliates
+  days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
+  return( (investment/days) * 10000000 )
+}
+
+computeSEMInvestment <- function(record) {
+  year <- as.numeric(record[1])
+  month <- as.numeric(record[2])
+  investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$SEM
+  days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
+  return( (investment/days) * 10000000 )
+}
+
+computeRadioInvestment <- function(record) {
+  year <- as.numeric(record[1])
+  month <- as.numeric(record[2])
+  investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Radio
+  days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
+  return( (investment/days) * 10000000 )
+}
+
+computeOtherInvestment <- function(record) {
+  year <- as.numeric(record[1])
+  month <- as.numeric(record[2])
+  investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Other
+  days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
+  return( (investment/days) * 10000000 )
 }
 
 consumerElectronicsDataForAnalysisDayAggregation$investment <- apply(consumerElectronicsDataForAnalysisDayAggregation, 1, computeInvestment)
-consumerElectronicsDataForAnalysisDayAggregation$investment <-consumerElectronicsDataForAnalysisDayAggregation$investment * 10000000
+consumerElectronicsDataForAnalysisDayAggregation$investmentTV <- apply(consumerElectronicsDataForAnalysisDayAggregation, 1, computeTVInvestment)
+consumerElectronicsDataForAnalysisDayAggregation$investmentDigital <- apply(consumerElectronicsDataForAnalysisDayAggregation, 1, computeDigitalInvestment)
+consumerElectronicsDataForAnalysisDayAggregation$investmentSponsorship <- apply(consumerElectronicsDataForAnalysisDayAggregation, 1, computeSponsorshipInvestment)
+consumerElectronicsDataForAnalysisDayAggregation$investmentContentMarketing <- apply(consumerElectronicsDataForAnalysisDayAggregation, 1, computeContentMarketingInvestment)
+consumerElectronicsDataForAnalysisDayAggregation$investmentOnlinemarketing <- apply(consumerElectronicsDataForAnalysisDayAggregation, 1, computeOnlinemarketingInvestment)
+consumerElectronicsDataForAnalysisDayAggregation$investmentAffiliates <- apply(consumerElectronicsDataForAnalysisDayAggregation, 1, computeAffiliatesInvestment)
+consumerElectronicsDataForAnalysisDayAggregation$investmentSEM <- apply(consumerElectronicsDataForAnalysisDayAggregation, 1, computeSEMInvestment)
+consumerElectronicsDataForAnalysisDayAggregation$investmentRadio <- apply(consumerElectronicsDataForAnalysisDayAggregation, 1, computeRadioInvestment)
+consumerElectronicsDataForAnalysisDayAggregation$investmentOther <- apply(consumerElectronicsDataForAnalysisDayAggregation, 1, computeOtherInvestment)
 
 
 ################################################################################################################################################
@@ -280,8 +362,8 @@ ggplot(melted2, aes(x=week, y=value, fill=variable)) +
 
 ## Weekly aggregation
 
-weekAggregationSplit1 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(Year, Month, week, gmv_revenue, investment) %>% group_by(Year, Month, week) %>% summarise_all(funs(sum), na.rm = TRUE)
-weekAggregationSplit2 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(-c(gmv_revenue, investment, day)) %>% group_by(Year, Month, week) %>% summarise_all(funs(mean = mean), na.rm = TRUE)
+weekAggregationSplit1 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(Year, Month, week, gmv_revenue, investment, investmentTV, investmentDigital, investmentSponsorship, investmentContentMarketing, investmentOnlinemarketing, investmentAffiliates, investmentSEM, investmentRadio, investmentOther) %>% group_by(Year, Month, week) %>% summarise_all(funs(sum), na.rm = TRUE)
+weekAggregationSplit2 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(-c(gmv_revenue, day, investment, investmentTV, investmentDigital, investmentSponsorship, investmentContentMarketing, investmentOnlinemarketing, investmentAffiliates, investmentSEM, investmentRadio, investmentOther)) %>% group_by(Year, Month, week) %>% summarise_all(funs(mean = mean), na.rm = TRUE)
 
 consumerElectronicsDataForAnalysisWeeklyAggregation <- cbind(weekAggregationSplit1, weekAggregationSplit2)
 
