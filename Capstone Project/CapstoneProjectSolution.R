@@ -233,7 +233,7 @@ consumerElectronicsDataForAnalysis$order_date <- as.Date(consumerElectronicsData
 consumerElectronicsDataForAnalysis$week <- as.numeric(format(consumerElectronicsDataForAnalysis$order_date,"%W"))
 consumerElectronicsDataForAnalysis$day <- as.numeric(format(consumerElectronicsDataForAnalysis$order_date,"%d"))
 
-##test <- merge(consumerElectronicsDataForAnalysis, salesEventsWeeklyLevel, by = c("Year", "Month", "week"), all = TRUE)
+consumerElectronicsDataForAnalysis <- merge(consumerElectronicsDataForAnalysis, salesEventsWeeklyLevel, by = c("Year", "Month", "week"), all = TRUE)
 
 consumerElectronicsDataForAnalysisForAggregation <- subset(consumerElectronicsDataForAnalysis, select = -c(X.U.FEFF.fsn_id, order_date))
 dmyForAggregation <- dummyVars(" ~ .", data = consumerElectronicsDataForAnalysisForAggregation, fullRank=T)
@@ -368,6 +368,8 @@ weekAggregationSplit1 <- consumerElectronicsDataForAnalysisDayAggregation %>% dp
 weekAggregationSplit2 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(-c(gmv, offer_price, day, investment, investmentTV, investmentDigital, investmentSponsorship, investmentContentMarketing, investmentOnlinemarketing, investmentAffiliates, investmentSEM, investmentRadio, investmentOther)) %>% group_by(Year, Month, week) %>% summarise_all(funs(mean = mean), na.rm = TRUE)
 
 consumerElectronicsDataForAnalysisWeeklyAggregation <- cbind(weekAggregationSplit1, weekAggregationSplit2)
+
+consumerElectronicsDataForAnalysisWeeklyAggregation <- merge(consumerElectronicsDataForAnalysisWeeklyAggregation, npsWeeklyLevel, by = c("Year", "Month", "week"), all = TRUE)
 
 ################################################################################################################################################
 
