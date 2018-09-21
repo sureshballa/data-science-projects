@@ -240,7 +240,7 @@ dmyForAggregation <- dummyVars(" ~ .", data = consumerElectronicsDataForAnalysis
 consumerElectronicsDataForAnalysisForAggregationWithDummayVariables <- data.frame(predict(dmyForAggregation, newdata = consumerElectronicsDataForAnalysisForAggregation))
 
 dayAggregationSplit1 <- consumerElectronicsDataForAnalysisForAggregationWithDummayVariables %>% dplyr::select(Year, Month, day, gmv, product_mrp, offer_price) %>% group_by(Year, Month, day) %>% summarise_all(funs(sum), na.rm = TRUE)
-dayAggregationSplit2 <- consumerElectronicsDataForAnalysisForAggregationWithDummayVariables %>% dplyr::select(-c(gmv, order_id, order_item_id, sla, cust_id, pincode, week)) %>% group_by(Year, Month, day) %>% summarise_all(funs(mean = mean), na.rm = TRUE)
+dayAggregationSplit2 <- consumerElectronicsDataForAnalysisForAggregationWithDummayVariables %>% dplyr::select(-c(gmv, order_id, order_item_id, sla, cust_id, pincode, week)) %>% group_by(Year, Month, day) %>% summarise_all(funs(sum = sum), na.rm = TRUE)
 dayAggregationSplit3 <- consumerElectronicsDataForAnalysisForAggregationWithDummayVariables %>% dplyr::select(Year, Month, day, week) %>% group_by(Year, Month, day) %>% summarise(week = head(week, 1))
 
 consumerElectronicsDataForAnalysisDayAggregation <- cbind(dayAggregationSplit1, dayAggregationSplit2, dayAggregationSplit3)
@@ -251,80 +251,80 @@ daysInMonth <- consumerElectronicsDataForAnalysisDayAggregation %>% group_by(Yea
 budgetByMonths <- merge(daysInMonth, budgetAllocations, by= c("Year", "Month"))
 
 computeInvestment <- function(record) {
-  year <- as.numeric(record[1])
-  month <- as.numeric(record[2])
+  year <- as.numeric(record['Year'])
+  month <- as.numeric(record['Month'])
   investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Total.Investment
   days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
   return( (investment/days) * 10000000 )
 }
 
 computeTVInvestment <- function(record) {
-  year <- as.numeric(record[1])
-  month <- as.numeric(record[2])
+  year <- as.numeric(record['Year'])
+  month <- as.numeric(record['Month'])
   investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$TV
   days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
   return( (investment/days) * 10000000 )
 }
 
 computeDigitalInvestment <- function(record) {
-  year <- as.numeric(record[1])
-  month <- as.numeric(record[2])
+  year <- as.numeric(record['Year'])
+  month <- as.numeric(record['Month'])
   investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Digital
   days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
   return( (investment/days) * 10000000 )
 }
 
 computeSponsorshipInvestment <- function(record) {
-  year <- as.numeric(record[1])
-  month <- as.numeric(record[2])
+  year <- as.numeric(record['Year'])
+  month <- as.numeric(record['Month'])
   investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Sponsorship
   days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
   return( (investment/days) * 10000000 )
 }
 
 computeContentMarketingInvestment <- function(record) {
-  year <- as.numeric(record[1])
-  month <- as.numeric(record[2])
+  year <- as.numeric(record['Year'])
+  month <- as.numeric(record['Month'])
   investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Content.Marketing
   days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
   return( (investment/days) * 10000000 )
 }
 
 computeOnlinemarketingInvestment <- function(record) {
-  year <- as.numeric(record[1])
-  month <- as.numeric(record[2])
+  year <- as.numeric(record['Year'])
+  month <- as.numeric(record['Month'])
   investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Online.marketing
   days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
   return( (investment/days) * 10000000 )
 }
 
 computeAffiliatesInvestment <- function(record) {
-  year <- as.numeric(record[1])
-  month <- as.numeric(record[2])
+  year <- as.numeric(record['Year'])
+  month <- as.numeric(record['Month'])
   investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Affiliates
   days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
   return( (investment/days) * 10000000 )
 }
 
 computeSEMInvestment <- function(record) {
-  year <- as.numeric(record[1])
-  month <- as.numeric(record[2])
+  year <- as.numeric(record['Year'])
+  month <- as.numeric(record['Month'])
   investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$SEM
   days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
   return( (investment/days) * 10000000 )
 }
 
 computeRadioInvestment <- function(record) {
-  year <- as.numeric(record[1])
-  month <- as.numeric(record[2])
+  year <- as.numeric(record['Year'])
+  month <- as.numeric(record['Month'])
   investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Radio
   days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
   return( (investment/days) * 10000000 )
 }
 
 computeOtherInvestment <- function(record) {
-  year <- as.numeric(record[1])
-  month <- as.numeric(record[2])
+  year <- as.numeric(record['Year'])
+  month <- as.numeric(record['Month'])
   investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Other
   days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
   return( (investment/days) * 10000000 )
@@ -365,7 +365,7 @@ ggplot(melted2, aes(x=week, y=value, fill=variable)) +
 ## Weekly aggregation
 
 weekAggregationSplit1 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(Year, Month, week, gmv, offer_price, investment, investmentTV, investmentDigital, investmentSponsorship, investmentContentMarketing, investmentOnlinemarketing, investmentAffiliates, investmentSEM, investmentRadio, investmentOther) %>% group_by(Year, Month, week) %>% summarise_all(funs(sum), na.rm = TRUE)
-weekAggregationSplit2 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(-c(gmv, offer_price, day, investment, investmentTV, investmentDigital, investmentSponsorship, investmentContentMarketing, investmentOnlinemarketing, investmentAffiliates, investmentSEM, investmentRadio, investmentOther)) %>% group_by(Year, Month, week) %>% summarise_all(funs(mean = mean), na.rm = TRUE)
+weekAggregationSplit2 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(-c(gmv, offer_price, day, investment, investmentTV, investmentDigital, investmentSponsorship, investmentContentMarketing, investmentOnlinemarketing, investmentAffiliates, investmentSEM, investmentRadio, investmentOther)) %>% group_by(Year, Month, week) %>% summarise_all(funs(sum = sum), na.rm = TRUE)
 
 consumerElectronicsDataForAnalysisWeeklyAggregation <- cbind(weekAggregationSplit1, weekAggregationSplit2)
 
@@ -379,7 +379,7 @@ correlationMatrixWeekly <- cor(consumerElectronicsDataForAnalysisWeeklyAggregati
 #corrplot(correlationMatrixWeekly, method = "color", type = "lower", order = "FPC", tl.cex = 0.6)
 
 ## Plot scatter plot for variables that have high correlation.
-highcorrWeekly <- c(names(correlationMatrixWeekly[,'gmv'])[which(correlationMatrixWeekly[,'gmv'] > 0.5)], names(correlationMatrixWeekly[,'gmv'])[which(correlationMatrixWeekly[,'gmv'] < -0.2)])
+highcorrWeekly <- c(names(correlationMatrixWeekly[,'gmv'])[which(correlationMatrixWeekly[,'gmv'] > 0.9)], names(correlationMatrixWeekly[,'gmv'])[which(correlationMatrixWeekly[,'gmv'] < -0.9)])
 data_corr_weekly <- consumerElectronicsDataForAnalysisWeeklyAggregation[,highcorrWeekly]
 doPlots(data_corr_weekly, fun = plotCorrAgainstRevenueGmv, ii = 1:ncol(data_corr_weekly))
 
