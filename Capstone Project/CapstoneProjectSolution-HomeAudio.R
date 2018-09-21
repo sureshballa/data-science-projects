@@ -22,82 +22,6 @@ sapply(load.libraries, require, character = TRUE)
 ## End of Install and load required libraries
 ################################################################################################################################################
 
-## Reusable function to plot histograms for given data set and ith column 
-plotHist <- function(data_in, i) {
-  data <- data.frame(x=data_in[[i]])
-  p <- ggplot(data=data, aes(x=factor(x))) + stat_count() + xlab(colnames(data_in)[i]) + theme_light() + 
-    theme(axis.text.x = element_text(angle = 90, hjust =1))
-  return (p)
-}
-
-## Reusable function to plot box plots for given data set and ith column
-plotBox <- function(data_in, i) {
-  data <- data.frame(x=data_in[[i]])
-  p <- ggplot(data=data) + geom_boxplot()
-  return (p)
-}
-
-## Reusable function to plot bars for given data set and ith column
-plotBar <- function(data_in, i) {
-  ggplot(data_in, aes(x=data_in[[i]])) + 
-    xlab(colnames(data_in)[i]) +
-    theme(axis.text.x = element_text(face="plain", color="black", 
-                                     size=9, angle=0, vjust=0),
-          axis.text.y = element_text(face="plain", color="black", 
-                                     size=9, angle=0)) +
-    geom_bar() +
-    geom_text(aes(label = ..count.., y = ..count..), stat= "count", vjust = -0.3, position = position_dodge(width=0.9))
-}
-
-## Reusable function to plot in grid for given configuration of number of columns
-doPlots <- function(data_in, fun, ii, ncol=3) {
-  pp <- list()
-  for (i in ii) {
-    p <- fun(data_in=data_in, i=i)
-    pp <- c(pp, list(p))
-  }
-  do.call("grid.arrange", c(pp, ncol=ncol))
-}
-
-plotBarForGmv <- function(data_in, col) {
-  ggplot(data_in, aes(x=col, y = gmv)) + 
-    geom_bar(stat = 'identity')
-}
-
-aggregateAndDoPlots <- function(data_in, fun, ii, ncol=3) {
-  pp <- list()
-  for (i in ii) {
-    grp <- paste0(colnames(data_in)[i]);
-    p <- ggplot(data_in %>% group_by(grp = data_in[[i]]) %>% summarise(gmv=sum(gmv, na.rm=TRUE), na.rm=T) %>% arrange(desc(gmv)), aes(x=grp, y = gmv)) + 
-      xlab(grp) +
-      geom_bar(stat = 'identity')
-    pp <- c(pp, list(p))
-  }
-  do.call("grid.arrange", c(pp, ncol=ncol))
-}
-
-plotCorrAgainstGmv <- function(data_in, i){
-  data <- data.frame(x = data_in[[i]], gmv = data_in$gmv)
-  p <- ggplot(data, aes(x = x, y = gmv)) + geom_point(shape = 1, na.rm = TRUE) + geom_smooth(method = lm ) + xlab(paste0(colnames(data_in)[i], '\n', 'R-Squared: ', round(cor(data_in[[i]], data$gmv, use = 'complete.obs'), 2))) + theme_light()
-  return(suppressWarnings(p))
-}
-
-plotCorrAgainstRevenueGmv <- function(data_in, i){
-  data <- data.frame(x = data_in[[i]], gmv = data_in$gmv)
-  p <- ggplot(data, aes(x = x, y = gmv)) + geom_point(shape = 1, na.rm = TRUE) + geom_smooth(method = lm ) + xlab(paste0(colnames(data_in)[i], '\n', 'R-Squared: ', round(cor(data_in[[i]], data$gmv, use = 'complete.obs'), 2))) + theme_light()
-  return(suppressWarnings(p))
-}
-
-## Reusable function to plot denisity for given data set and ith column
-plotDen <- function(data_in, i){
-  data <- data.frame(x=data_in[[i]])
-  p <- ggplot(data= data) + geom_line(aes(x = x), stat = 'density', size = 1,alpha = 1.0) +
-    xlab(paste0((colnames(data_in)[i]), '\n', 'Skewness: ',round(skewness(data_in[[i]], na.rm = TRUE), 2))) + theme_light() 
-  return(p)
-}
-
-## End of Reusable functions for plots
-################################################################################################################################################
 
 ## Load data sets
 #DA Handed the \N for Null values
@@ -118,7 +42,6 @@ colnames(budgetAllocations)[1] <- "Year"
 consumerElectronicsData$Month <- as.numeric(consumerElectronicsData$Month)
 consumerElectronicsData$Year <- as.numeric(consumerElectronicsData$Year)
 consumerElectronicsDataForAnalysis <- consumerElectronicsData %>% filter((Year == 2015 & Month >= 7) | (Year == 2016 & Month <= 6))
-##consumerElectronicsDataForAnalysis <- consumerElectronicsDataForAnalysis %>% filter(product_analytic_sub_category == "GamingAccessory" | product_analytic_sub_category == "CameraAccessory" | product_analytic_sub_category == "HomeAudio")
 
 consumerElectronicsDataForAnalysis$offer_price = consumerElectronicsDataForAnalysis$product_mrp - consumerElectronicsDataForAnalysis$gmv
 
@@ -157,78 +80,6 @@ if (length(nearZeroVariances_trues_indexes) > 0) {
 ## Based on above operation, columns <TODO: Put column names here> are removed becase these columns contains single value
 ################################################################################################################################################
 
-## Numerical vs Categorical seperation
-
-categorical_variables <- names(consumerElectronicsDataForAnalysis)[which(sapply(consumerElectronicsDataForAnalysis, is.character))]
-numerical_variables <- names(consumerElectronicsDataForAnalysis)[which(sapply(consumerElectronicsDataForAnalysis, is.numeric))]
-##numerical_variables = c(numerical_variables, names(consumerElectronicsDataForAnalysis)[which(sapply(consumerElectronicsDataForAnalysis, is.double))])
-
-## Do column by column analysis and accordingly decide to remove or rearrange
-categorical_variables <- categorical_variables[which(categorical_variables != "X.U.FEFF.fsn_id")]
-categorical_variables <- categorical_variables[which(categorical_variables != "order_date")]
-numerical_variables <- numerical_variables[which(numerical_variables != "Year")]
-numerical_variables <- numerical_variables[which(numerical_variables != "Month")]
-numerical_variables <- numerical_variables[which(numerical_variables != "order_id")]
-numerical_variables <- numerical_variables[which(numerical_variables != "order_item_id")]
-numerical_variables <- numerical_variables[which(numerical_variables != "cust_id")]
-categorical_variables <- c(categorical_variables, "Year", "Month")
-
-master_frame_categorical_variables_only <- consumerElectronicsDataForAnalysis[, categorical_variables]
-master_frame_numerical_variables_only <- consumerElectronicsDataForAnalysis[, numerical_variables]
-
-## Convert all character to factors
-master_frame_categorical_variables_only[sapply(master_frame_categorical_variables_only, is.character)] <- 
-  lapply(master_frame_categorical_variables_only[sapply(master_frame_categorical_variables_only, is.character)], 
-         as.factor)
-
-## End of Numerical vs Categorical seperation
-################################################################################################################################################
-
-## Univariate Analysis
-
-## For all plots below, please zoom or full screen for better view
-
-## Denstity plots for numeric variables
-doPlots(master_frame_numerical_variables_only, fun = plotDen, ii = 1:ncol(master_frame_numerical_variables_only), ncol = 5)
-
-## Bar plots each categorical variables.
-doPlots(master_frame_categorical_variables_only, fun = plotBar, ii = 1:ncol(master_frame_categorical_variables_only), ncol = 2)
-
-## End of Univariate Analysis
-################################################################################################################################################
-
-## Begin of Bivariate Analysis
-
-##Lets remove columns X.U.FEFF.fsn_id, order_date and product_analytic_vertical for corrrelation plot (because so many products)
-
-consumerElectronicsDataForAnalysisForCorrelation <- subset(consumerElectronicsDataForAnalysis, select = -c(X.U.FEFF.fsn_id, order_date, product_analytic_vertical))
-
-dmy <- dummyVars(" ~ .", data = consumerElectronicsDataForAnalysisForCorrelation, fullRank=T)
-consumerElectronicsDataForAnalysisWithDummayVariables <- data.frame(predict(dmy, newdata = consumerElectronicsDataForAnalysisForCorrelation))
-
-correlationMatrix <- cor(consumerElectronicsDataForAnalysisWithDummayVariables, use = "pairwise.complete.obs")
-corrplot(correlationMatrix, method = "color", type = "lower", order = "FPC", tl.cex = 0.6)
-
-## Plot scatter plot for variables that have high correlation.
-highcorr <- c(names(correlationMatrix[,'gmv'])[which(correlationMatrix[,'gmv'] > 0.5)], names(correlationMatrix[,'gmv'])[which(correlationMatrix[,'gmv'] < -0.2)])
-data_corr <- consumerElectronicsDataForAnalysisWithDummayVariables[,highcorr]
-doPlots(data_corr, fun = plotCorrAgainstGmv, ii = 1:ncol(data_corr))
-
-## End of Bivariate Analysis
-################################################################################################################################################
-
-# Boxplots of numeric variables relative to gvm
-doPlots(cbind(master_frame_categorical_variables_only, gvm = consumerElectronicsDataForAnalysis$gmv), fun = plotBoxWithSegmentsForGVM, ii = 1:ncol(master_frame_categorical_variables_only), ncol = 5)
-
-
-################################################################################################################################################
-
-aggregateAndDoPlots(cbind(master_frame_categorical_variables_only, gmv = consumerElectronicsDataForAnalysis$gmv), fun = plotBarForGmv, ii = 1:ncol(master_frame_categorical_variables_only), ncol = 2)
-
-################################################################################################################################################
-
-## Lets do EDA against marketting budget
-
 consumerElectronicsDataForAnalysis$order_date <- as.Date(consumerElectronicsDataForAnalysis$order_date)
 consumerElectronicsDataForAnalysis$week <- as.numeric(format(consumerElectronicsDataForAnalysis$order_date,"%W"))
 consumerElectronicsDataForAnalysis$day <- as.numeric(format(consumerElectronicsDataForAnalysis$order_date,"%d"))
@@ -240,94 +91,107 @@ dmyForAggregation <- dummyVars(" ~ .", data = consumerElectronicsDataForAnalysis
 consumerElectronicsDataForAnalysisForAggregationWithDummayVariables <- data.frame(predict(dmyForAggregation, newdata = consumerElectronicsDataForAnalysisForAggregation))
 
 dayAggregationSplit1 <- consumerElectronicsDataForAnalysisForAggregationWithDummayVariables %>% dplyr::select(Year, Month, day, gmv, product_mrp, offer_price) %>% group_by(Year, Month, day) %>% summarise_all(funs(sum), na.rm = TRUE)
-dayAggregationSplit2 <- consumerElectronicsDataForAnalysisForAggregationWithDummayVariables %>% dplyr::select(-c(gmv, order_id, order_item_id, sla, cust_id, pincode, week)) %>% group_by(Year, Month, day) %>% summarise_all(funs(mean = mean), na.rm = TRUE)
+dayAggregationSplit2 <- consumerElectronicsDataForAnalysisForAggregationWithDummayVariables %>% dplyr::select(-c(gmv, order_id, order_item_id, sla, cust_id, pincode, week)) %>% group_by(Year, Month, day) %>% summarise_all(funs(sum = sum), na.rm = TRUE)
 dayAggregationSplit3 <- consumerElectronicsDataForAnalysisForAggregationWithDummayVariables %>% dplyr::select(Year, Month, day, week) %>% group_by(Year, Month, day) %>% summarise(week = head(week, 1))
+dayAggregationSplit4 <- consumerElectronicsDataForAnalysisForAggregationWithDummayVariables %>% dplyr::select(Year, Month, day) %>% group_by(Year, Month, day) %>% summarise(totalOrders = n())
 
-consumerElectronicsDataForAnalysisDayAggregation <- cbind(dayAggregationSplit1, dayAggregationSplit2, dayAggregationSplit3)
+consumerElectronicsDataForAnalysisDayAggregation <- cbind(dayAggregationSplit1, dayAggregationSplit2, dayAggregationSplit3, dayAggregationSplit4)
+consumerElectronicsDataForAnalysisDayAggregation$homeAudioPropertionate <- consumerElectronicsDataForAnalysisDayAggregation$product_analytic_sub_categoryHomeAudio_sum / consumerElectronicsDataForAnalysisDayAggregation$totalOrders
 
-##consumerElectronicsDataForAnalysisDayAggregation <- consumerElectronicsDataForAnalysis %>% group_by(Year, Month, day) %>% summarise(n=n(), revenue=sum(gmv, na.rm=TRUE), subCategories = paste(unique(product_analytic_sub_category), collapse = ","), week = head(week, 1))
+consumerElectronicsDataForAnalysisDayAggregation <- consumerElectronicsDataForAnalysisDayAggregation %>% filter(product_analytic_sub_categoryHomeAudio_sum > 0)
 
 daysInMonth <- consumerElectronicsDataForAnalysisDayAggregation %>% group_by(Year, Month) %>% summarise(days=n())
 budgetByMonths <- merge(daysInMonth, budgetAllocations, by= c("Year", "Month"))
 
+
 computeInvestment <- function(record) {
-  year <- as.numeric(record[1])
-  month <- as.numeric(record[2])
+  year <- as.numeric(record['Year'])
+  month <- as.numeric(record['Month'])
+  proportionate <- as.double(record['homeAudioPropertionate'])
   investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Total.Investment
   days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
-  return( (investment/days) * 10000000 )
+  return( proportionate * (investment/days) * 10000000 )
 }
 
 computeTVInvestment <- function(record) {
-  year <- as.numeric(record[1])
-  month <- as.numeric(record[2])
+  year <- as.numeric(record['Year'])
+  month <- as.numeric(record['Month'])
+  proportionate <- as.double(record['homeAudioPropertionate'])
   investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$TV
   days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
-  return( (investment/days) * 10000000 )
+  return( proportionate * (investment/days) * 10000000 )
 }
 
 computeDigitalInvestment <- function(record) {
-  year <- as.numeric(record[1])
-  month <- as.numeric(record[2])
+  year <- as.numeric(record['Year'])
+  month <- as.numeric(record['Month'])
+  proportionate <- as.double(record['homeAudioPropertionate'])
   investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Digital
   days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
-  return( (investment/days) * 10000000 )
+  return( proportionate * (investment/days) * 10000000 )
 }
 
 computeSponsorshipInvestment <- function(record) {
-  year <- as.numeric(record[1])
-  month <- as.numeric(record[2])
+  year <- as.numeric(record['Year'])
+  month <- as.numeric(record['Month'])
+  proportionate <- as.double(record['homeAudioPropertionate'])
   investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Sponsorship
   days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
-  return( (investment/days) * 10000000 )
+  return( proportionate * (investment/days) * 10000000 )
 }
 
 computeContentMarketingInvestment <- function(record) {
-  year <- as.numeric(record[1])
-  month <- as.numeric(record[2])
+  year <- as.numeric(record['Year'])
+  month <- as.numeric(record['Month'])
+  proportionate <- as.double(record['homeAudioPropertionate'])
   investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Content.Marketing
   days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
   return( (investment/days) * 10000000 )
 }
 
 computeOnlinemarketingInvestment <- function(record) {
-  year <- as.numeric(record[1])
-  month <- as.numeric(record[2])
+  year <- as.numeric(record['Year'])
+  month <- as.numeric(record['Month'])
+  proportionate <- as.double(record['homeAudioPropertionate'])
   investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Online.marketing
   days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
-  return( (investment/days) * 10000000 )
+  return( proportionate * (investment/days) * 10000000 )
 }
 
 computeAffiliatesInvestment <- function(record) {
-  year <- as.numeric(record[1])
-  month <- as.numeric(record[2])
+  year <- as.numeric(record['Year'])
+  month <- as.numeric(record['Month'])
+  proportionate <- as.double(record['homeAudioPropertionate'])
   investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Affiliates
   days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
-  return( (investment/days) * 10000000 )
+  return( proportionate * (investment/days) * 10000000 )
 }
 
 computeSEMInvestment <- function(record) {
-  year <- as.numeric(record[1])
-  month <- as.numeric(record[2])
+  year <- as.numeric(record['Year'])
+  month <- as.numeric(record['Month'])
+  proportionate <- as.double(record['homeAudioPropertionate'])
   investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$SEM
   days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
-  return( (investment/days) * 10000000 )
+  return( proportionate * (investment/days) * 10000000 )
 }
 
 computeRadioInvestment <- function(record) {
-  year <- as.numeric(record[1])
-  month <- as.numeric(record[2])
+  year <- as.numeric(record['Year'])
+  month <- as.numeric(record['Month'])
+  proportionate <- as.double(record['homeAudioPropertionate'])
   investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Radio
   days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
-  return( (investment/days) * 10000000 )
+  return( proportionate * (investment/days) * 10000000 )
 }
 
 computeOtherInvestment <- function(record) {
-  year <- as.numeric(record[1])
-  month <- as.numeric(record[2])
+  year <- as.numeric(record['Year'])
+  month <- as.numeric(record['Month'])
+  proportionate <- as.double(record['homeAudioPropertionate'])
   investment <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$Other
   days <- (budgetByMonths %>% filter(Year == year & Month == month) %>% head(1))$days
-  return( (investment/days) * 10000000 )
+  return( proportionate * (investment/days) * 10000000 )
 }
 
 consumerElectronicsDataForAnalysisDayAggregation$investment <- apply(consumerElectronicsDataForAnalysisDayAggregation, 1, computeInvestment)
@@ -340,7 +204,6 @@ consumerElectronicsDataForAnalysisDayAggregation$investmentAffiliates <- apply(c
 consumerElectronicsDataForAnalysisDayAggregation$investmentSEM <- apply(consumerElectronicsDataForAnalysisDayAggregation, 1, computeSEMInvestment)
 consumerElectronicsDataForAnalysisDayAggregation$investmentRadio <- apply(consumerElectronicsDataForAnalysisDayAggregation, 1, computeRadioInvestment)
 consumerElectronicsDataForAnalysisDayAggregation$investmentOther <- apply(consumerElectronicsDataForAnalysisDayAggregation, 1, computeOtherInvestment)
-
 
 ################################################################################################################################################
 
@@ -373,13 +236,4 @@ consumerElectronicsDataForAnalysisWeeklyAggregation <- merge(consumerElectronics
 
 ################################################################################################################################################
 
-## Begin of Bivariate Analysis (with included investment and at week level)
-
-correlationMatrixWeekly <- cor(consumerElectronicsDataForAnalysisWeeklyAggregation, use = "pairwise.complete.obs")
-#corrplot(correlationMatrixWeekly, method = "color", type = "lower", order = "FPC", tl.cex = 0.6)
-
-## Plot scatter plot for variables that have high correlation.
-highcorrWeekly <- c(names(correlationMatrixWeekly[,'gmv'])[which(correlationMatrixWeekly[,'gmv'] > 0.5)], names(correlationMatrixWeekly[,'gmv'])[which(correlationMatrixWeekly[,'gmv'] < -0.2)])
-data_corr_weekly <- consumerElectronicsDataForAnalysisWeeklyAggregation[,highcorrWeekly]
-doPlots(data_corr_weekly, fun = plotCorrAgainstRevenueGmv, ii = 1:ncol(data_corr_weekly))
 
