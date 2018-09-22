@@ -104,19 +104,33 @@ consumerElectronicsDataForAnalysis$day <- as.numeric(format(consumerElectronicsD
 
 consumerElectronicsDataForAnalysis <- merge(consumerElectronicsDataForAnalysis, salesEventsWeeklyLevel, by = c("Year", "Month", "week"), all = TRUE)
 
-consumerElectronicsDataForAnalysisForAggregation <- subset(consumerElectronicsDataForAnalysis, select = -c(X.U.FEFF.fsn_id, order_date))
+consumerElectronicsDataForAnalysisForAggregation <- subset(consumerElectronicsDataForAnalysis, select = -c(X.U.FEFF.fsn_id, order_date)) %>% filter(product_analytic_sub_category == "HomeAudio" )
+
+## Remove near zero variance variables which doesnt makese sense (For example, col having only one value is of no use)
+nearZeroVariances1 <- nearZeroVar(consumerElectronicsDataForAnalysisForAggregation, saveMetrics = TRUE)
+nearZeroVariances_trues_indexes1 <- which(nearZeroVariances1$nzv == TRUE)
+
+## Units, deliverybdays, deliverycdays and product_analytic_super_category are columns that are near zero variance.
+
+if (length(nearZeroVariances_trues_indexes1) > 0) {
+  consumerElectronicsDataForAnalysisForAggregation <- consumerElectronicsDataForAnalysisForAggregation[, -(nearZeroVariances_trues_indexes1)]
+}
+
 dmyForAggregation <- dummyVars(" ~ .", data = consumerElectronicsDataForAnalysisForAggregation, fullRank=T)
 consumerElectronicsDataForAnalysisForAggregationWithDummayVariables <- data.frame(predict(dmyForAggregation, newdata = consumerElectronicsDataForAnalysisForAggregation))
 
 dayAggregationSplit1 <- consumerElectronicsDataForAnalysisForAggregationWithDummayVariables %>% dplyr::select(Year, Month, day, gmv, product_mrp, offer_price) %>% group_by(Year, Month, day) %>% summarise_all(funs(sum), na.rm = TRUE)
 dayAggregationSplit2 <- consumerElectronicsDataForAnalysisForAggregationWithDummayVariables %>% dplyr::select(-c(gmv, order_id, order_item_id, sla, cust_id, pincode, week)) %>% group_by(Year, Month, day) %>% summarise_all(funs(sum = sum), na.rm = TRUE)
 dayAggregationSplit3 <- consumerElectronicsDataForAnalysisForAggregationWithDummayVariables %>% dplyr::select(Year, Month, day, week) %>% group_by(Year, Month, day) %>% summarise(week = head(week, 1))
-dayAggregationSplit4 <- consumerElectronicsDataForAnalysisForAggregationWithDummayVariables %>% dplyr::select(Year, Month, day) %>% group_by(Year, Month, day) %>% summarise(totalOrders = n())
+dayAggregationSplit4 <- consumerElectronicsDataForAnalysisForAggregationWithDummayVariables %>% dplyr::select(Year, Month, day) %>% group_by(Year, Month, day) %>% summarise(totalHomeAccessoriesOrders = n())
+dayAggregationSplit5 <- consumerElectronicsDataForAnalysis %>% dplyr::select(Year, Month, day) %>% group_by(Year, Month, day) %>% summarise(totalOrders = n())
 
 consumerElectronicsDataForAnalysisDayAggregation <- cbind(dayAggregationSplit1, dayAggregationSplit2, dayAggregationSplit3, dayAggregationSplit4)
-consumerElectronicsDataForAnalysisDayAggregation$homeAudioPropertionate <- consumerElectronicsDataForAnalysisDayAggregation$product_analytic_sub_categoryHomeAudio_sum / consumerElectronicsDataForAnalysisDayAggregation$totalOrders
+consumerElectronicsDataForAnalysisDayAggregation <- merge(consumerElectronicsDataForAnalysisDayAggregation, dayAggregationSplit5, by = c("Year", "Month", "day"), all = TRUE)
 
-consumerElectronicsDataForAnalysisDayAggregation <- consumerElectronicsDataForAnalysisDayAggregation %>% filter(product_analytic_sub_categoryHomeAudio_sum > 0)
+consumerElectronicsDataForAnalysisDayAggregation$homeAudioPropertionate <- consumerElectronicsDataForAnalysisDayAggregation$totalHomeAccessoriesOrders / consumerElectronicsDataForAnalysisDayAggregation$totalOrders
+
+consumerElectronicsDataForAnalysisDayAggregation <- consumerElectronicsDataForAnalysisDayAggregation %>% filter(totalHomeAccessoriesOrders > 0)
 
 daysInMonth <- consumerElectronicsDataForAnalysisDayAggregation %>% group_by(Year, Month) %>% summarise(days=n())
 budgetByMonths <- merge(daysInMonth, budgetAllocations, by= c("Year", "Month"))
