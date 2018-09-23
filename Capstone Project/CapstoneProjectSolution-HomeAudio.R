@@ -263,9 +263,17 @@ weekAggregationSplit1 <- consumerElectronicsDataForAnalysisDayAggregation %>% dp
 weekAggregationSplit2 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(-c(deliverycdays_mean, deliverybdays_mean, product_procurement_sla_mean, homeAudioPropertionate, gmv, offer_price, day, investment, investmentTV, investmentDigital, investmentSponsorship, investmentContentMarketing, investmentOnlinemarketing, investmentAffiliates, investmentSEM, investmentRadio, investmentOther)) %>% group_by(Year, Month, week) %>% summarise_all(funs(sum = sum), na.rm = TRUE)
 weekAggregationSplit3 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(Year, Month, week, deliverycdays_mean, deliverybdays_mean, product_procurement_sla_mean, homeAudioPropertionate) %>% group_by(Year, Month, week) %>% summarise_all(funs(mean), na.rm = TRUE)
 
-consumerElectronicsDataForAnalysisWeeklyAggregation <- Reduce(function(x, y) merge(x, y, by = c("Year", "Month", "week"), all=TRUE), list(weekAggregationSplit1, weekAggregationSplit2, weekAggregationSplit3))
+#View(weekAggregationSplit1)
+#View(weekAggregationSplit2)
+#View(weekAggregationSplit3)
+consumerElectronicsDataForAnalysisWeeklyAggregation <- Reduce(function(x, y) merge(x, y, by = c("Year", "Month", "week"), all=TRUE), list(weekAggregationSplit1, weekAggregationSplit2))
+
+#consumerElectronicsDataForAnalysisWeeklyAggregation <- Reduce(function(x, y) merge(x, y, by = c("Year", "Month", "week"), all=TRUE), list(weekAggregationSplit1, weekAggregationSplit2, weekAggregationSplit3))
 
 consumerElectronicsDataForAnalysisWeeklyAggregation <- merge(consumerElectronicsDataForAnalysisWeeklyAggregation, npsWeeklyLevel, by = c("Year", "Month", "week"), all = TRUE)
+nrow(consumerElectronicsDataForAnalysisWeeklyAggregation)
+consumerElectronicsDataForAnalysisWeeklyAggregation <- consumerElectronicsDataForAnalysisWeeklyAggregation %>% filter(!is.na(gmv))
+nrow(consumerElectronicsDataForAnalysisWeeklyAggregation)
 
 ################################################################################################################################################
 
@@ -293,7 +301,8 @@ doPlots(data_corr_weekly_only_for_investments, fun = plotCorrAgainstRevenueGmv, 
 ##---------------- Start: Linear Regression model -------------##
 
 dataset_final_analysis <- consumerElectronicsDataForAnalysisWeeklyAggregation
-
+colnames(dataset_final_analysis)
+View(dataset_final_analysis)
 # separate training and testing data
 set.seed(100)
 trainindices= sample(1:nrow(dataset_final_analysis), 0.7*nrow(dataset_final_analysis))
@@ -304,101 +313,104 @@ test = dataset_final_analysis[-trainindices,]
 model_1 <-lm(gmv~.,data=train)
 summary(model_1)
 
-#Residual standard error: 27950 on 8 degrees of freedom
+#Residual standard error: 39830 on 6 degrees of freedom
+#(6 observations deleted due to missingness)
 #Multiple R-squared:      1,	Adjusted R-squared:  0.9999 
-#F-statistic: 1.82e+04 on 32 and 8 DF,  p-value: < 2.2e-16
+#F-statistic:  8956 on 28 and 6 DF,  p-value: 7.668e-12
 
 step <- stepAIC(model_1, direction="both")
 step
 
-model_2 <- lm(formula = gmv ~ offer_price + investment + investmentTV + 
+model_2 <- lm(formula = gmv ~ Year + Month + week + offer_price + investmentTV + 
                 investmentDigital + investmentSponsorship + investmentContentMarketing + 
-                investmentOnlinemarketing + investmentAffiliates + investmentSEM + 
-                investmentRadio + product_mrp_sum + s1_fact.order_payment_typePrepaid_sum_sum + 
-                product_analytic_verticalDJController_sum_sum + product_analytic_verticalDockingStation_sum_sum + 
+                investmentOnlinemarketing + investmentAffiliates + investmentRadio + 
+                investmentOther + product_mrp_sum + s1_fact.order_payment_typePrepaid_sum_sum + 
+                product_analytic_verticalDock_sum_sum + product_analytic_verticalDockingStation_sum_sum + 
                 product_analytic_verticalFMRadio_sum_sum + product_analytic_verticalHiFiSystem_sum_sum + 
-                product_analytic_verticalHomeAudioSpeaker_sum_sum + product_analytic_verticalKaraokePlayer_sum_sum + 
-                product_analytic_verticalVoiceRecorder_sum_sum + product_procurement_sla_sum_sum + 
-                totalHomeAccessoriesOrders_sum + homeAudioPropertionate_sum, 
-              data = train)
+                product_analytic_verticalKaraokePlayer_sum_sum + product_analytic_verticalSlingBox_sum_sum + 
+                product_analytic_verticalVoiceRecorder_sum_sum + totalHomeAccessoriesOrders_sum + 
+                totalOrders_sum + NPS_WeekAvg, data = train)
 
 #let's check the summary of the model for R-squared and Adjusted R-squared
 summary(model_2)
-#Residual standard error: 19530 on 18 degrees of freedom
-#Multiple R-squared:      1,	Adjusted R-squared:      1 
-#F-statistic: 5.42e+04 on 22 and 18 DF,  p-value: < 2.2e-16
+#Residual standard error: 31730 on 10 degrees of freedom
+#(6 observations deleted due to missingness)
+#Multiple R-squared:      1,	Adjusted R-squared:  0.9999 
+#F-statistic: 1.646e+04 on 24 and 10 DF,  p-value: < 2.2e-16
 
 #let's check for Multicollinearity
 vif(model_2)
 
 #remove variables having VIF > 2 and P > 0.005
 #variables fits the condition and so should be removed
-#investmentOnlinemarketing, product_mrp_sum
-#product_analytic_verticalDJController_sum_sum,	product_analytic_verticalDockingStation_sum_sum
-#product_analytic_verticalHomeAudioSpeaker_sum_sum
+#Month,	week, s1_fact.order_payment_typePrepaid_sum_sum
+#product_analytic_verticalDockingStation_sum_sum
+#product_analytic_verticalHiFiSystem_sum_sum
+#product_analytic_verticalSlingBox_sum_sum
+
 
 #-------------------------------------------------
-model_3 <- lm(formula = gmv ~ offer_price + investment + investmentTV + 
+model_3 <- lm(formula = gmv ~ Year + offer_price + investmentTV + 
                 investmentDigital + investmentSponsorship + investmentContentMarketing + 
-                investmentAffiliates + investmentSEM + 
-                investmentRadio + s1_fact.order_payment_typePrepaid_sum_sum + 
-                product_analytic_verticalFMRadio_sum_sum + product_analytic_verticalHiFiSystem_sum_sum + 
-                product_analytic_verticalKaraokePlayer_sum_sum + 
-                product_analytic_verticalVoiceRecorder_sum_sum + product_procurement_sla_sum_sum + 
-                totalHomeAccessoriesOrders_sum + homeAudioPropertionate_sum, 
-              data = train)
+                investmentOnlinemarketing + investmentAffiliates + investmentRadio + 
+                investmentOther + product_mrp_sum +  
+                product_analytic_verticalDock_sum_sum +  
+                product_analytic_verticalFMRadio_sum_sum +  
+                product_analytic_verticalKaraokePlayer_sum_sum +  
+                product_analytic_verticalVoiceRecorder_sum_sum + totalHomeAccessoriesOrders_sum + 
+                totalOrders_sum + NPS_WeekAvg, data = train)
 
 #let's check the summary of the model for R-squared and Adjusted R-squared
 summary(model_3)
-#Residual standard error: 140800 on 23 degrees of freedom
-#Multiple R-squared:  0.999,	Adjusted R-squared:  0.9983 
-#F-statistic:  1349 on 17 and 23 DF,  p-value: < 2.2e-16
+#Residual standard error: 49410 on 16 degrees of freedom
+#(6 observations deleted due to missingness)
+#Multiple R-squared:  0.9999,	Adjusted R-squared:  0.9998 
+#F-statistic:  9052 on 18 and 16 DF,  p-value: < 2.2e-16
 
 #let's check for Multicollinearity
 vif(model_3)
 
 #remove variables having VIF > 2 and P > 0.005
 #variables fits the condition and so should be removed
-#offer_price, s1_fact.order_payment_typePrepaid_sum_sum
-#product_analytic_verticalFMRadio_sum_sum,	product_analytic_verticalHiFiSystem_sum_sum
-#product_procurement_sla_sum_sum
-#homeAudioPropertionate_sum
+#Year, investmentSponsorship, product_analytic_verticalDock_sum_sum
+#product_analytic_verticalVoiceRecorder_sum_sum
+#totalOrders_sum	NPS_WeekAvg
 
-##-------------------------------------
-model_4 <- lm(formula = gmv ~ investment + investmentTV + 
-                investmentDigital + investmentSponsorship + investmentContentMarketing + 
-                investmentAffiliates + investmentSEM + 
-                investmentRadio +  
-                product_analytic_verticalKaraokePlayer_sum_sum + 
-                product_analytic_verticalVoiceRecorder_sum_sum +  
-                totalHomeAccessoriesOrders_sum, 
-              data = train)
+#-------------------------------------------------
+model_4 <- lm(formula = gmv ~ offer_price + investmentTV + 
+                investmentDigital + investmentContentMarketing + 
+                investmentOnlinemarketing + investmentAffiliates + investmentRadio + 
+                investmentOther + product_mrp_sum +  
+                product_analytic_verticalFMRadio_sum_sum +  
+                product_analytic_verticalKaraokePlayer_sum_sum +  
+                totalHomeAccessoriesOrders_sum, data = train)
 
 #let's check the summary of the model for R-squared and Adjusted R-squared
 summary(model_4)
-#Residual standard error: 200100 on 29 degrees of freedom
-#Multiple R-squared:  0.9974,	Adjusted R-squared:  0.9965 
-#F-statistic:  1031 on 11 and 29 DF,  p-value: < 2.2e-16
+#Residual standard error: 45310 on 28 degrees of freedom
+#Multiple R-squared:  0.9999,	Adjusted R-squared:  0.9998 
+#F-statistic: 1.847e+04 on 12 and 28 DF,  p-value: < 2.2e-16
 
 #let's check for Multicollinearity
 vif(model_4)
 
 #remove variables having VIF > 2 and P > 0.005
 #variables fits the condition and so should be removed
-#NO VARIABLE FOUND TO BE DELETED i.e. we have reached to optimal model
+#NO VARIABLES TO DELETE
+
 
 # ----- let's test  the model ------
 
 # predicting the results in test dataset
-Predict_1 <- predict(model_4,test[,-1])
+Predict_1 <- predict(model_4,test)
 test$test_gmv <- Predict_1
 View(test)
 # Now, we need to test the r square between actual and predicted sales. 
 r <- cor(test$gmv,test$test_gmv)
 rsquared <- cor(test$gmv,test$test_gmv)^2
 rsquared
-#0.96
+#0.9993642
 
-# R Squared value of the test data is 0.96 which is really good so model could be recommended to be accepted
+# R Squared value of the test data is 0.9993642 which is really good so model could be recommended to be accepted
 
 ##---------------- End: Linear Regression model -------------##
