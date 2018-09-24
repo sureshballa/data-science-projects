@@ -52,6 +52,11 @@ npsWeeklyLevel <- read.csv("NPS.csv", stringsAsFactors = FALSE, encoding = "UTF-
 
 colnames(budgetAllocations)[1] <- "Year"
 
+nrow(consumerElectronicsData)
+nrow(distinct(consumerElectronicsData))
+
+consumerElectronicsData <- distinct(consumerElectronicsData)
+
 ## End of load data sets
 ################################################################################################################################################
 
@@ -102,7 +107,8 @@ consumerElectronicsDataForAnalysis$order_date <- as.Date(consumerElectronicsData
 consumerElectronicsDataForAnalysis$week <- as.numeric(format(consumerElectronicsDataForAnalysis$order_date,"%W"))
 consumerElectronicsDataForAnalysis$day <- as.numeric(format(consumerElectronicsDataForAnalysis$order_date,"%d"))
 
-consumerElectronicsDataForAnalysis <- merge(consumerElectronicsDataForAnalysis, salesEventsWeeklyLevel, by = c("Year", "Month", "week"), all = TRUE)
+consumerElectronicsDataForAnalysis <- distinct(consumerElectronicsDataForAnalysis)
+consumerElectronicsDataForAnalysis <- merge(consumerElectronicsDataForAnalysis, salesEventsWeeklyLevel, by = c("Year", "Month", "week"), all.x = TRUE)
 
 consumerElectronicsDataForAnalysisForAggregation <- subset(consumerElectronicsDataForAnalysis, select = -c(X.U.FEFF.fsn_id, order_date)) %>% filter(product_analytic_sub_category == "GamingAccessory" )
 
@@ -119,6 +125,8 @@ if (length(nearZeroVariances_trues_indexes1) > 0) {
 dmyForAggregation <- dummyVars(" ~ .", data = consumerElectronicsDataForAnalysisForAggregation, fullRank=T)
 consumerElectronicsDataForAnalysisForAggregationWithDummayVariables <- data.frame(predict(dmyForAggregation, newdata = consumerElectronicsDataForAnalysisForAggregation))
 
+consumerElectronicsDataForAnalysisForAggregationWithDummayVariables <- distinct(consumerElectronicsDataForAnalysisForAggregationWithDummayVariables)
+
 dayAggregationSplit1 <- consumerElectronicsDataForAnalysisForAggregationWithDummayVariables %>% dplyr::select(Year, Month, day, gmv, product_mrp, offer_price) %>% group_by(Year, Month, day) %>% summarise_all(funs(sum), na.rm = TRUE)
 dayAggregationSplit2 <- consumerElectronicsDataForAnalysisForAggregationWithDummayVariables %>% dplyr::select(-c(gmv, order_id, order_item_id, sla, cust_id, pincode, week, deliverybdays, deliverycdays, product_procurement_sla)) %>% group_by(Year, Month, day) %>% summarise_all(funs(sum = sum), na.rm = TRUE)
 dayAggregationSplit3 <- consumerElectronicsDataForAnalysisForAggregationWithDummayVariables %>% dplyr::select(Year, Month, day, deliverybdays, deliverycdays, product_procurement_sla) %>% group_by(Year, Month, day) %>% summarise_all(funs(mean = mean), na.rm = TRUE)
@@ -126,7 +134,7 @@ dayAggregationSplit4 <- consumerElectronicsDataForAnalysisForAggregationWithDumm
 dayAggregationSplit5 <- consumerElectronicsDataForAnalysisForAggregationWithDummayVariables %>% dplyr::select(Year, Month, day) %>% group_by(Year, Month, day) %>% summarise(totalGamingAccessoryOrders = n())
 dayAggregationSplit6 <- consumerElectronicsDataForAnalysis %>% dplyr::select(Year, Month, day) %>% group_by(Year, Month, day) %>% summarise(totalOrders = n())
 
-consumerElectronicsDataForAnalysisDayAggregation <- Reduce(function(x, y) merge(x, y, by = c("Year", "Month", "day"), all=TRUE), list(dayAggregationSplit1, dayAggregationSplit2, dayAggregationSplit3, dayAggregationSplit4, dayAggregationSplit5, dayAggregationSplit6))
+consumerElectronicsDataForAnalysisDayAggregation <- Reduce(function(x, y) merge(x, y, by = c("Year", "Month", "day"), all.x=TRUE), list(dayAggregationSplit1, dayAggregationSplit2, dayAggregationSplit3, dayAggregationSplit4, dayAggregationSplit5, dayAggregationSplit6))
 
 consumerElectronicsDataForAnalysisDayAggregation$gamingAccessoryPropertionate <- consumerElectronicsDataForAnalysisDayAggregation$totalGamingAccessoryOrders / consumerElectronicsDataForAnalysisDayAggregation$totalOrders
 
@@ -259,13 +267,13 @@ ggplot(melted2, aes(x=week, y=value, fill=variable)) +
 
 ## Weekly aggregation
 
-weekAggregationSplit1 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(Year, Month, week, gmv, offer_price, investmentTV, investmentDigital, investmentSponsorship, investmentContentMarketing, investmentOnlinemarketing, investmentAffiliates, investmentSEM, investmentRadio, investmentOther) %>% group_by(Year, Month, week) %>% summarise_all(funs(sum), na.rm = TRUE)
-weekAggregationSplit2 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(-c(deliverycdays_mean, deliverybdays_mean, product_procurement_sla_mean, gamingAccessoryPropertionate, gmv, offer_price, day, investmentTV, investmentDigital, investmentSponsorship, investmentContentMarketing, investmentOnlinemarketing, investmentAffiliates, investmentSEM, investmentRadio, investmentOther)) %>% group_by(Year, Month, week) %>% summarise_all(funs(sum = sum), na.rm = TRUE)
-weekAggregationSplit3 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(Year, Month, week, deliverycdays_mean, deliverybdays_mean, product_procurement_sla_mean, gamingAccessoryPropertionate) %>% group_by(Year, Month, week) %>% summarise_all(funs(mean), na.rm = TRUE)
+weekAggregationSplit1 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(Year, week, gmv, offer_price, investmentTV, investmentDigital, investmentSponsorship, investmentContentMarketing, investmentOnlinemarketing, investmentAffiliates, investmentSEM, investmentRadio, investmentOther) %>% group_by(Year, week) %>% summarise_all(funs(sum), na.rm = TRUE)
+weekAggregationSplit2 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(-c(Month, deliverycdays_mean, deliverybdays_mean, product_procurement_sla_mean, gamingAccessoryPropertionate, gmv, offer_price, day, investmentTV, investmentDigital, investmentSponsorship, investmentContentMarketing, investmentOnlinemarketing, investmentAffiliates, investmentSEM, investmentRadio, investmentOther)) %>% group_by(Year, week) %>% summarise_all(funs(sum = sum), na.rm = TRUE)
+weekAggregationSplit3 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(Year, week, deliverycdays_mean, deliverybdays_mean, product_procurement_sla_mean, gamingAccessoryPropertionate) %>% group_by(Year, week) %>% summarise_all(funs(mean), na.rm = TRUE)
 
-consumerElectronicsDataForAnalysisWeeklyAggregation <- Reduce(function(x, y) merge(x, y, by = c("Year", "Month", "week"), all=TRUE), list(weekAggregationSplit1, weekAggregationSplit2, weekAggregationSplit3))
+consumerElectronicsDataForAnalysisWeeklyAggregation <- Reduce(function(x, y) merge(x, y, by = c("Year", "week"), all.x=TRUE), list(weekAggregationSplit1, weekAggregationSplit2, weekAggregationSplit3))
 
-consumerElectronicsDataForAnalysisWeeklyAggregation <- merge(consumerElectronicsDataForAnalysisWeeklyAggregation, npsWeeklyLevel, by = c("Year", "Month", "week"), all = TRUE)
+consumerElectronicsDataForAnalysisWeeklyAggregation <- merge(consumerElectronicsDataForAnalysisWeeklyAggregation, npsWeeklyLevel, by = c("Year", "week"), all.x = TRUE)
 
 ################################################################################################################################################
 
