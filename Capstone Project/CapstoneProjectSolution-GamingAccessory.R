@@ -66,7 +66,7 @@ consumerElectronicsData$Month <- as.numeric(consumerElectronicsData$Month)
 consumerElectronicsData$Year <- as.numeric(consumerElectronicsData$Year)
 consumerElectronicsDataForAnalysis <- consumerElectronicsData %>% filter((Year == 2015 & Month >= 7) | (Year == 2016 & Month <= 6))
 
-consumerElectronicsDataForAnalysis$offer_price = consumerElectronicsDataForAnalysis$product_mrp - consumerElectronicsDataForAnalysis$gmv
+consumerElectronicsDataForAnalysis$offer_price = consumerElectronicsDataForAnalysis$product_mrp**consumerElectronicsDataForAnalysis$units - consumerElectronicsDataForAnalysis$gmv
 
 ## Handling of NA's
 NA.proportion <- function(x) mean(is.na(x))
