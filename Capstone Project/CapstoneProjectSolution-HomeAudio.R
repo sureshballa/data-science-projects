@@ -267,7 +267,8 @@ ggplot(melted2, aes(x=week, y=value, fill=variable)) +
 
 ## Weekly aggregation
 
-weekAggregationSplit1 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(Year, week, gmv, offer_price, investmentTV, investmentDigital, investmentSponsorship, investmentContentMarketing, investmentOnlinemarketing, investmentAffiliates, investmentSEM, investmentRadio, investmentOther) %>% group_by(Year, week) %>% summarise_all(funs(sum), na.rm = TRUE)
+weekAggregationSplit1 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(Year, week, gmv, investmentTV, investmentDigital, investmentSponsorship, investmentContentMarketing, investmentOnlinemarketing, investmentAffiliates, investmentSEM, investmentRadio, investmentOther) %>% group_by(Year, week) %>% summarise_all(funs(sum), na.rm = TRUE)
+
 weekAggregationSplit2 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(-c(Month, deliverycdays_mean, deliverybdays_mean, product_procurement_sla_mean, homeAudioPropertionate, gmv, offer_price, day, investment, investmentTV, investmentDigital, investmentSponsorship, investmentContentMarketing, investmentOnlinemarketing, investmentAffiliates, investmentSEM, investmentRadio, investmentOther)) %>% group_by(Year, week) %>% summarise_all(funs(sum = sum), na.rm = TRUE)
 weekAggregationSplit3 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(Year, week, deliverycdays_mean, deliverybdays_mean, product_procurement_sla_mean, homeAudioPropertionate) %>% group_by(Year, week) %>% summarise_all(funs(mean), na.rm = TRUE)
 
@@ -309,6 +310,49 @@ doPlots(data_corr_weekly_only_for_investments, fun = plotCorrAgainstRevenueGmv, 
 dataset_final_analysis <- consumerElectronicsDataForAnalysisWeeklyAggregation
 colnames(dataset_final_analysis)
 View(dataset_final_analysis)
+#"investmentDigital"                                 "investmentSponsorship"                            
+#"investmentContentMarketing"                        "investmentOnlinemarketing"                        
+#"investmentAffiliates"                              "investmentSEM"                                    
+#"investmentRadio"                                   "investmentOther"                                  
+#"product_mrp_sum"                                   "s1_fact.order_payment_typePrepaid_sum_sum"        
+#"product_analytic_verticalDJController_sum_sum"     "product_analytic_verticalDock_sum_sum"            
+#"product_analytic_verticalDockingStation_sum_sum"   "product_analytic_verticalFMRadio_sum_sum"         
+#"product_analytic_verticalHiFiSystem_sum_sum"       "product_analytic_verticalHomeAudioSpeaker_sum_sum"
+#"product_analytic_verticalKaraokePlayer_sum_sum"    "product_analytic_verticalSlingBox_sum_sum"        
+#"product_analytic_verticalSoundMixer_sum_sum"       "product_analytic_verticalVoiceRecorder_sum_sum"   
+#"product_mrp_sum_sum"                               "offer_price_sum_sum"                              
+#"totalHomeAccessoriesOrders_sum"                    "totalOrders_sum"                                  
+#"NPS_WeekAvg"  
+dataset_final_analysis$investmentTV <-scale(dataset_final_analysis$investmentTV)
+dataset_final_analysis$offer_price <-scale(dataset_final_analysis$offer_price)
+dataset_final_analysis$investmentDigital <-scale(dataset_final_analysis$investmentDigital)
+dataset_final_analysis$investmentContentMarketing <-scale(dataset_final_analysis$investmentContentMarketing)
+dataset_final_analysis$investmentAffiliates <-scale(dataset_final_analysis$investmentAffiliates)
+dataset_final_analysis$investmentRadio <-scale(dataset_final_analysis$investmentRadio)
+dataset_final_analysis$product_mrp_sum <-scale(dataset_final_analysis$product_mrp_sum)
+dataset_final_analysis$product_analytic_verticalDJController_sum_sum <-scale(dataset_final_analysis$product_analytic_verticalDJController_sum_sum)
+dataset_final_analysis$product_analytic_verticalDockingStation_sum_sum <-scale(dataset_final_analysis$product_analytic_verticalDockingStation_sum_sum)
+dataset_final_analysis$product_analytic_verticalHiFiSystem_sum_sum <-scale(dataset_final_analysis$product_analytic_verticalHiFiSystem_sum_sum)
+dataset_final_analysis$product_analytic_verticalKaraokePlayer_sum_sum <-scale(dataset_final_analysis$product_analytic_verticalKaraokePlayer_sum_sum)
+dataset_final_analysis$product_analytic_verticalSoundMixer_sum_sum <-scale(dataset_final_analysis$product_analytic_verticalSoundMixer_sum_sum)
+dataset_final_analysis$product_mrp_sum_sum <-scale(dataset_final_analysis$product_mrp_sum_sum)
+dataset_final_analysis$totalHomeAccessoriesOrders_sum <-scale(dataset_final_analysis$totalHomeAccessoriesOrders_sum)
+dataset_final_analysis$NPS_WeekAvg <-scale(dataset_final_analysis$NPS_WeekAvg)
+dataset_final_analysis$investmentSponsorship <-scale(dataset_final_analysis$investmentSponsorship)
+dataset_final_analysis$investmentOnlinemarketing <-scale(dataset_final_analysis$investmentOnlinemarketing)
+dataset_final_analysis$investmentSEM <-scale(dataset_final_analysis$investmentSEM)
+dataset_final_analysis$investmentOther <-scale(dataset_final_analysis$investmentOther)
+dataset_final_analysis$s1_fact.order_payment_typePrepaid_sum_sum <-scale(dataset_final_analysis$s1_fact.order_payment_typePrepaid_sum_sum)
+dataset_final_analysis$product_analytic_verticalDock_sum_sum <-scale(dataset_final_analysis$product_analytic_verticalDock_sum_sum)
+dataset_final_analysis$product_analytic_verticalFMRadio_sum_sum <-scale(dataset_final_analysis$product_analytic_verticalFMRadio_sum_sum)
+dataset_final_analysis$product_analytic_verticalHomeAudioSpeaker_sum_sum <-scale(dataset_final_analysis$product_analytic_verticalHomeAudioSpeaker_sum_sum)
+dataset_final_analysis$product_analytic_verticalSlingBox_sum_sum <-scale(dataset_final_analysis$product_analytic_verticalSlingBox_sum_sum)
+dataset_final_analysis$product_analytic_verticalVoiceRecorder_sum_sum <-scale(dataset_final_analysis$product_analytic_verticalVoiceRecorder_sum_sum)
+dataset_final_analysis$offer_price_sum_sum <-scale(dataset_final_analysis$offer_price_sum_sum)
+dataset_final_analysis$totalOrders_sum <-scale(dataset_final_analysis$totalOrders_sum)
+View(dataset_final_analysis)
+
+
 # separate training and testing data
 set.seed(100)
 trainindices= sample(1:nrow(dataset_final_analysis), 0.7*nrow(dataset_final_analysis))
