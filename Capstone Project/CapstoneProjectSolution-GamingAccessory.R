@@ -3,7 +3,7 @@
 
 ## IIITB - Group_Facilitator_RollNo: DDA1730041
 ## Team:
-## 1) Fayiz Mayam Veetil
+## 1) Fayiz Mayam Veettil
 ## 2) Merin Jose
 ## 3) Deepak Aneja
 ## 4) Suresh Balla
@@ -51,6 +51,7 @@ salesEventsWeeklyLevel <- read.csv("events_salesdays.csv", stringsAsFactors = FA
 npsWeeklyLevel <- read.csv("NPS.csv", stringsAsFactors = FALSE, encoding = "UTF-8", na.strings = c("NA","NaN","","#DIV/0!"))
 
 colnames(budgetAllocations)[1] <- "Year"
+colnames(salesEventsWeeklyLevel)[1] <- "Year"
 
 nrow(consumerElectronicsData)
 nrow(distinct(consumerElectronicsData))
