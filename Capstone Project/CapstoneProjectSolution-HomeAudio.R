@@ -227,145 +227,70 @@ doPlots(data_corr_weekly_only_for_investments, fun = plotCorrAgainstRevenueGmv, 
 
 dataset_final_analysis <- consumerElectronicsDataForAnalysisWeeklyAggregation
 colnames(dataset_final_analysis)
-View(dataset_final_analysis)
-#"investmentDigital"                                 "investmentSponsorship"                            
-#"investmentContentMarketing"                        "investmentOnlinemarketing"                        
-#"investmentAffiliates"                              "investmentSEM"                                    
-#"investmentRadio"                                   "investmentOther"                                  
-#"product_mrp_sum"                                   "s1_fact.order_payment_typePrepaid_sum_sum"        
-#"product_analytic_verticalDJController_sum_sum"     "product_analytic_verticalDock_sum_sum"            
-#"product_analytic_verticalDockingStation_sum_sum"   "product_analytic_verticalFMRadio_sum_sum"         
-#"product_analytic_verticalHiFiSystem_sum_sum"       "product_analytic_verticalHomeAudioSpeaker_sum_sum"
-#"product_analytic_verticalKaraokePlayer_sum_sum"    "product_analytic_verticalSlingBox_sum_sum"        
-#"product_analytic_verticalSoundMixer_sum_sum"       "product_analytic_verticalVoiceRecorder_sum_sum"   
-#"product_mrp_sum_sum"                               "offer_price_sum_sum"                              
-#"totalHomeAccessoriesOrders_sum"                    "totalOrders_sum"                                  
-#"NPS_WeekAvg"  
-dataset_final_analysis$investmentTV <-scale(dataset_final_analysis$investmentTV)
-dataset_final_analysis$offer_price <-scale(dataset_final_analysis$offer_price)
-dataset_final_analysis$investmentDigital <-scale(dataset_final_analysis$investmentDigital)
-dataset_final_analysis$investmentContentMarketing <-scale(dataset_final_analysis$investmentContentMarketing)
-dataset_final_analysis$investmentAffiliates <-scale(dataset_final_analysis$investmentAffiliates)
-dataset_final_analysis$investmentRadio <-scale(dataset_final_analysis$investmentRadio)
-dataset_final_analysis$product_mrp_sum <-scale(dataset_final_analysis$product_mrp_sum)
-dataset_final_analysis$product_analytic_verticalDJController_sum_sum <-scale(dataset_final_analysis$product_analytic_verticalDJController_sum_sum)
-dataset_final_analysis$product_analytic_verticalDockingStation_sum_sum <-scale(dataset_final_analysis$product_analytic_verticalDockingStation_sum_sum)
-dataset_final_analysis$product_analytic_verticalHiFiSystem_sum_sum <-scale(dataset_final_analysis$product_analytic_verticalHiFiSystem_sum_sum)
-dataset_final_analysis$product_analytic_verticalKaraokePlayer_sum_sum <-scale(dataset_final_analysis$product_analytic_verticalKaraokePlayer_sum_sum)
-dataset_final_analysis$product_analytic_verticalSoundMixer_sum_sum <-scale(dataset_final_analysis$product_analytic_verticalSoundMixer_sum_sum)
-dataset_final_analysis$product_mrp_sum_sum <-scale(dataset_final_analysis$product_mrp_sum_sum)
-dataset_final_analysis$totalHomeAccessoriesOrders_sum <-scale(dataset_final_analysis$totalHomeAccessoriesOrders_sum)
-dataset_final_analysis$NPS_WeekAvg <-scale(dataset_final_analysis$NPS_WeekAvg)
-dataset_final_analysis$investmentSponsorship <-scale(dataset_final_analysis$investmentSponsorship)
-dataset_final_analysis$investmentOnlinemarketing <-scale(dataset_final_analysis$investmentOnlinemarketing)
-dataset_final_analysis$investmentSEM <-scale(dataset_final_analysis$investmentSEM)
-dataset_final_analysis$investmentOther <-scale(dataset_final_analysis$investmentOther)
-dataset_final_analysis$s1_fact.order_payment_typePrepaid_sum_sum <-scale(dataset_final_analysis$s1_fact.order_payment_typePrepaid_sum_sum)
-dataset_final_analysis$product_analytic_verticalDock_sum_sum <-scale(dataset_final_analysis$product_analytic_verticalDock_sum_sum)
-dataset_final_analysis$product_analytic_verticalFMRadio_sum_sum <-scale(dataset_final_analysis$product_analytic_verticalFMRadio_sum_sum)
-dataset_final_analysis$product_analytic_verticalHomeAudioSpeaker_sum_sum <-scale(dataset_final_analysis$product_analytic_verticalHomeAudioSpeaker_sum_sum)
-dataset_final_analysis$product_analytic_verticalSlingBox_sum_sum <-scale(dataset_final_analysis$product_analytic_verticalSlingBox_sum_sum)
-dataset_final_analysis$product_analytic_verticalVoiceRecorder_sum_sum <-scale(dataset_final_analysis$product_analytic_verticalVoiceRecorder_sum_sum)
-dataset_final_analysis$offer_price_sum_sum <-scale(dataset_final_analysis$offer_price_sum_sum)
-dataset_final_analysis$totalOrders_sum <-scale(dataset_final_analysis$totalOrders_sum)
-View(dataset_final_analysis)
+#View(dataset_final_analysis)
+
+is.nan.data.frame <- function(x)
+  do.call(cbind, lapply(x, is.nan))
+
+dataset_final_analysis[is.nan(dataset_final_analysis)] <- 0
 
 
 # separate training and testing data
 set.seed(100)
-trainindices= sample(1:nrow(dataset_final_analysis), 0.7*nrow(dataset_final_analysis))
+trainindices= sample(1:nrow(dataset_final_analysis), 0.8*nrow(dataset_final_analysis))
 train = dataset_final_analysis[trainindices,]
 test = dataset_final_analysis[-trainindices,]
 
 # Build model 1 containing all variables
-model_1 <-lm(gmv~.,data=train)
+model_1 <-lm(gmv ~ Year + week + EventBSD_sum_sum + EventDiwali_sum_sum + EventEid...Rathayatra_sum_sum + 
+               EventPacman_sum_sum + EventVday_sum_sum + deliverybdays_mean + NPS_WeekAvg + investment + 
+               investmentDigital + investmentContentMarketing + investmentAffiliates + investmentRadio +
+               Other.1 + EventChristmas...New.Year_sum_sum + EventDussehra_sum_sum + EventFHSD_sum_sum +
+               EventRepublic_sum_sum + deliverycdays_mean + investmentTV + investmentSponsorship + 
+               investmentOnlinemarketing + investmentSEM + investmentOther
+                ,data=train)
 summary(model_1)
-
-#Residual standard error: 39830 on 6 degrees of freedom
-#(6 observations deleted due to missingness)
-#Multiple R-squared:      1,	Adjusted R-squared:  0.9999 
-#F-statistic:  8956 on 28 and 6 DF,  p-value: 7.668e-12
 
 step <- stepAIC(model_1, direction="both")
 step
 
-model_2 <- lm(formula = gmv ~ Year + Month + week + offer_price + investmentTV + 
-                investmentDigital + investmentSponsorship + investmentContentMarketing + 
-                investmentOnlinemarketing + investmentAffiliates + investmentRadio + 
-                investmentOther + product_mrp_sum + s1_fact.order_payment_typePrepaid_sum_sum + 
-                product_analytic_verticalDock_sum_sum + product_analytic_verticalDockingStation_sum_sum + 
-                product_analytic_verticalFMRadio_sum_sum + product_analytic_verticalHiFiSystem_sum_sum + 
-                product_analytic_verticalKaraokePlayer_sum_sum + product_analytic_verticalSlingBox_sum_sum + 
-                product_analytic_verticalVoiceRecorder_sum_sum + totalHomeAccessoriesOrders_sum + 
-                totalOrders_sum + NPS_WeekAvg, data = train)
+model_2 <- lm(formula = gmv ~ EventDiwali_sum_sum + EventVday_sum_sum + 
+                NPS_WeekAvg + investment + investmentRadio + EventChristmas...New.Year_sum_sum + 
+                EventDussehra_sum_sum + investmentTV + investmentSponsorship, 
+                data = train)
 
 #let's check the summary of the model for R-squared and Adjusted R-squared
 summary(model_2)
-#Residual standard error: 31730 on 10 degrees of freedom
-#(6 observations deleted due to missingness)
-#Multiple R-squared:      1,	Adjusted R-squared:  0.9999 
-#F-statistic: 1.646e+04 on 24 and 10 DF,  p-value: < 2.2e-16
+
 
 #let's check for Multicollinearity
 vif(model_2)
 
-#remove variables having VIF > 2 and P > 0.005
-#variables fits the condition and so should be removed
-#Month,	week, s1_fact.order_payment_typePrepaid_sum_sum
-#product_analytic_verticalDockingStation_sum_sum
-#product_analytic_verticalHiFiSystem_sum_sum
-#product_analytic_verticalSlingBox_sum_sum
-
 
 #-------------------------------------------------
-model_3 <- lm(formula = gmv ~ Year + offer_price + investmentTV + 
-                investmentDigital + investmentSponsorship + investmentContentMarketing + 
-                investmentOnlinemarketing + investmentAffiliates + investmentRadio + 
-                investmentOther + product_mrp_sum +  
-                product_analytic_verticalDock_sum_sum +  
-                product_analytic_verticalFMRadio_sum_sum +  
-                product_analytic_verticalKaraokePlayer_sum_sum +  
-                product_analytic_verticalVoiceRecorder_sum_sum + totalHomeAccessoriesOrders_sum + 
-                totalOrders_sum + NPS_WeekAvg, data = train)
+
+#NPS_WeekAvg
+model_3 <- lm(formula = gmv ~ EventDiwali_sum_sum + EventVday_sum_sum + 
+                investment + investmentRadio + EventChristmas...New.Year_sum_sum + 
+                EventDussehra_sum_sum + investmentTV + investmentSponsorship, 
+              data = train)
 
 #let's check the summary of the model for R-squared and Adjusted R-squared
 summary(model_3)
-#Residual standard error: 49410 on 16 degrees of freedom
-#(6 observations deleted due to missingness)
-#Multiple R-squared:  0.9999,	Adjusted R-squared:  0.9998 
-#F-statistic:  9052 on 18 and 16 DF,  p-value: < 2.2e-16
 
 #let's check for Multicollinearity
 vif(model_3)
 
-#remove variables having VIF > 2 and P > 0.005
-#variables fits the condition and so should be removed
-#Year, investmentSponsorship, product_analytic_verticalDock_sum_sum
-#product_analytic_verticalVoiceRecorder_sum_sum
-#totalOrders_sum	NPS_WeekAvg
+
 
 #-------------------------------------------------
-model_4 <- lm(formula = gmv ~ offer_price + investmentTV + 
-                investmentDigital + investmentContentMarketing + 
-                investmentOnlinemarketing + investmentAffiliates + investmentRadio + 
-                investmentOther + product_mrp_sum +  
-                product_analytic_verticalFMRadio_sum_sum +  
-                product_analytic_verticalKaraokePlayer_sum_sum +  
-                totalHomeAccessoriesOrders_sum, data = train)
+#investmentSponsorship
+model_4 <- lm(formula = gmv ~ EventDiwali_sum_sum + EventVday_sum_sum + 
+                investment + investmentRadio + EventChristmas...New.Year_sum_sum + 
+                EventDussehra_sum_sum + investmentTV + investmentSponsorship, 
+              data = train)
 
-#let's check the summary of the model for R-squared and Adjusted R-squared
 summary(model_4)
-#Residual standard error: 45310 on 28 degrees of freedom
-#Multiple R-squared:  0.9999,	Adjusted R-squared:  0.9998 
-#F-statistic: 1.847e+04 on 12 and 28 DF,  p-value: < 2.2e-16
-
-#let's check for Multicollinearity
-vif(model_4)
-
-#remove variables having VIF > 2 and P > 0.005
-#variables fits the condition and so should be removed
-#NO VARIABLES TO DELETE
-
 
 # ----- let's test  the model ------
 
@@ -377,8 +302,8 @@ View(test)
 r <- cor(test$gmv,test$test_gmv)
 rsquared <- cor(test$gmv,test$test_gmv)^2
 rsquared
-#0.9993642
 
-# R Squared value of the test data is 0.9993642 which is really good so model could be recommended to be accepted
+
+# 
 
 ##---------------- End: Linear Regression model -------------##
