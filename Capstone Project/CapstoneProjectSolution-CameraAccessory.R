@@ -113,50 +113,31 @@ consumerElectronicsDataForAnalysis <- merge(consumerElectronicsDataForAnalysis, 
 
 consumerElectronicsDataForAnalysisForAggregation <- subset(consumerElectronicsDataForAnalysis, select = -c(X.U.FEFF.fsn_id, order_date)) %>% filter(product_analytic_sub_category == "CameraAccessory" )
 
-## Remove near zero variance variables which doesnt makese sense (For example, col having only one value is of no use)
-nearZeroVariances1 <- nearZeroVar(consumerElectronicsDataForAnalysisForAggregation, saveMetrics = TRUE)
-nearZeroVariances_trues_indexes1 <- which(nearZeroVariances1$nzv == TRUE)
+categorical_variables_indexes <- as.integer(which(sapply(consumerElectronicsDataForAnalysisForAggregation, is.character)))
 
-## Units, deliverybdays, deliverycdays and product_analytic_super_category are columns that are near zero variance.
+weekAggregationSplit1 <- consumerElectronicsDataForAnalysisForAggregation %>% dplyr::select(Year, week, gmv, product_mrp, offer_price) %>% group_by(Year, week) %>% summarise_all(funs(sum), na.rm = TRUE)
+weekAggregationSplit2 <- consumerElectronicsDataForAnalysisForAggregation %>% dplyr::select(Year, week, deliverycdays, deliverybdays, product_procurement_sla) %>% group_by(Year, week) %>% summarise_all(funs(mean), na.rm = TRUE)
 
-if (length(nearZeroVariances_trues_indexes1) > 0) {
-  consumerElectronicsDataForAnalysisForAggregation <- consumerElectronicsDataForAnalysisForAggregation[, -(nearZeroVariances_trues_indexes1)]
+consumerElectronicsDataForAnalysisWeeklyAggregation <- merge(weekAggregationSplit1, weekAggregationSplit2, by = c("Year", "week"), all.x=TRUE)
+
+for (category_variable_index in categorical_variables_indexes) {
+  dataFrameTemp <- consumerElectronicsDataForAnalysisForAggregation %>% 
+    dplyr::select(Year, week, !!colnames(consumerElectronicsDataForAnalysisForAggregation)[category_variable_index]) %>% 
+    group_by_at(c("Year", "week", colnames(consumerElectronicsDataForAnalysisForAggregation)[category_variable_index])) %>%
+    summarise(count = n()) %>% 
+    mutate(prop = count / sum(count) )
+  
+  dataFrameTemp[[3]] <- paste0(colnames(consumerElectronicsDataForAnalysisForAggregation)[category_variable_index], "_", dataFrameTemp[[3]])
+  temp <- dcast(dataFrameTemp, paste0("Year + week ~ ", colnames(consumerElectronicsDataForAnalysisForAggregation)[category_variable_index]), value.var="prop")
+  consumerElectronicsDataForAnalysisWeeklyAggregation <- merge(consumerElectronicsDataForAnalysisWeeklyAggregation, temp, by = c("Year", "week"), all.x=TRUE)
+  remove(dataFrameTemp)
+  remove(temp)
 }
 
-dmyForAggregation <- dummyVars(" ~ .", data = consumerElectronicsDataForAnalysisForAggregation, fullRank=T)
-consumerElectronicsDataForAnalysisForAggregationWithDummayVariables <- data.frame(predict(dmyForAggregation, newdata = consumerElectronicsDataForAnalysisForAggregation))
-
-consumerElectronicsDataForAnalysisForAggregationWithDummayVariables <- distinct(consumerElectronicsDataForAnalysisForAggregationWithDummayVariables)
-
-dayAggregationSplit1 <- consumerElectronicsDataForAnalysisForAggregationWithDummayVariables %>% dplyr::select(Year, Month, day, gmv, product_mrp, offer_price) %>% group_by(Year, Month, day) %>% summarise_all(funs(sum), na.rm = TRUE)
-dayAggregationSplit2 <- consumerElectronicsDataForAnalysisForAggregationWithDummayVariables %>% dplyr::select(-c(gmv, order_id, order_item_id, sla, cust_id, pincode, week, deliverybdays, deliverycdays, product_procurement_sla)) %>% group_by(Year, Month, day) %>% summarise_all(funs(sum = sum), na.rm = TRUE)
-dayAggregationSplit3 <- consumerElectronicsDataForAnalysisForAggregationWithDummayVariables %>% dplyr::select(Year, Month, day, deliverybdays, deliverycdays, product_procurement_sla) %>% group_by(Year, Month, day) %>% summarise_all(funs(mean = mean), na.rm = TRUE)
-dayAggregationSplit4 <- consumerElectronicsDataForAnalysisForAggregationWithDummayVariables %>% dplyr::select(Year, Month, day, week) %>% group_by(Year, Month, day) %>% summarise(week = head(week, 1))
-dayAggregationSplit5 <- consumerElectronicsDataForAnalysisForAggregationWithDummayVariables %>% dplyr::select(Year, Month, day) %>% group_by(Year, Month, day) %>% summarise(totalCameraAccessoryOrders = n())
-dayAggregationSplit6 <- consumerElectronicsDataForAnalysis %>% dplyr::select(Year, Month, day) %>% group_by(Year, Month, day) %>% summarise(totalOrders = n())
-
-consumerElectronicsDataForAnalysisDayAggregation <- Reduce(function(x, y) merge(x, y, by = c("Year", "Month", "day"), all.x=TRUE), list(dayAggregationSplit1, dayAggregationSplit2, dayAggregationSplit3, dayAggregationSplit4, dayAggregationSplit5, dayAggregationSplit6))
-
-consumerElectronicsDataForAnalysisDayAggregation <- consumerElectronicsDataForAnalysisDayAggregation %>% filter(totalCameraAccessoryOrders > 0)
-
-################################################################################################################################################
-
-## Weekly aggregation
-
-weekAggregationSplit1 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(Year, week, gmv, offer_price) %>% group_by(Year, week) %>% summarise_all(funs(sum), na.rm = TRUE)
-weekAggregationSplit2 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(-c(Month, deliverycdays_mean, deliverybdays_mean, product_procurement_sla_mean, gmv, offer_price, day)) %>% group_by(Year, week) %>% summarise_all(funs(sum = sum), na.rm = TRUE)
-weekAggregationSplit3 <- consumerElectronicsDataForAnalysisDayAggregation %>% dplyr::select(Year, week, deliverycdays_mean, deliverybdays_mean, product_procurement_sla_mean) %>% group_by(Year, week) %>% summarise_all(funs(mean), na.rm = TRUE)
-
-consumerElectronicsDataForAnalysisWeeklyAggregation <- Reduce(function(x, y) merge(x, y, by = c("Year", "week"), all.x=TRUE), list(weekAggregationSplit1, weekAggregationSplit2, weekAggregationSplit3))
-
 consumerElectronicsDataForAnalysisWeeklyAggregation <- merge(consumerElectronicsDataForAnalysisWeeklyAggregation, npsWeeklyLevel, by = c("Year", "week"), all.x = TRUE)
-nrow(consumerElectronicsDataForAnalysisWeeklyAggregation)
-consumerElectronicsDataForAnalysisWeeklyAggregation <- consumerElectronicsDataForAnalysisWeeklyAggregation %>% filter(!is.na(gmv))
-nrow(consumerElectronicsDataForAnalysisWeeklyAggregation)
-
-consumerElectronicsDataForAnalysisWeeklyAggregation$cameraAccesorryPropertionate = consumerElectronicsDataForAnalysisWeeklyAggregation$totalCameraAccessoryOrders_sum / consumerElectronicsDataForAnalysisWeeklyAggregation$totalOrders_sum
-
 consumerElectronicsDataForAnalysisWeeklyAggregation <- merge(consumerElectronicsDataForAnalysisWeeklyAggregation, budgetAllocationsWeekly, by = c("Year", "week"), all.x = TRUE)
+
+nrow(consumerElectronicsDataForAnalysisWeeklyAggregation)
 
 colnames(consumerElectronicsDataForAnalysisWeeklyAggregation)[colnames(consumerElectronicsDataForAnalysisWeeklyAggregation) == 'Total.Investment'] <- 'investment'
 colnames(consumerElectronicsDataForAnalysisWeeklyAggregation)[colnames(consumerElectronicsDataForAnalysisWeeklyAggregation) == 'TV'] <- 'investmentTV'
@@ -168,18 +149,6 @@ colnames(consumerElectronicsDataForAnalysisWeeklyAggregation)[colnames(consumerE
 colnames(consumerElectronicsDataForAnalysisWeeklyAggregation)[colnames(consumerElectronicsDataForAnalysisWeeklyAggregation) == 'SEM'] <- 'investmentSEM'
 colnames(consumerElectronicsDataForAnalysisWeeklyAggregation)[colnames(consumerElectronicsDataForAnalysisWeeklyAggregation) == 'Radio'] <- 'investmentRadio'
 colnames(consumerElectronicsDataForAnalysisWeeklyAggregation)[colnames(consumerElectronicsDataForAnalysisWeeklyAggregation) == 'Other'] <- 'investmentOther'
-
-# consumerElectronicsDataForAnalysisWeeklyAggregation$investment <- consumerElectronicsDataForAnalysisWeeklyAggregation$investment*(consumerElectronicsDataForAnalysisWeeklyAggregation$cameraAccesorryPropertionate)
-# consumerElectronicsDataForAnalysisWeeklyAggregation$investmentTV <- consumerElectronicsDataForAnalysisWeeklyAggregation$investmentTV*(consumerElectronicsDataForAnalysisWeeklyAggregation$cameraAccesorryPropertionate)
-# consumerElectronicsDataForAnalysisWeeklyAggregation$investmentDigital <- consumerElectronicsDataForAnalysisWeeklyAggregation$investmentDigital*(consumerElectronicsDataForAnalysisWeeklyAggregation$cameraAccesorryPropertionate)
-# consumerElectronicsDataForAnalysisWeeklyAggregation$investmentSponsorship <- consumerElectronicsDataForAnalysisWeeklyAggregation$investmentSponsorship*(consumerElectronicsDataForAnalysisWeeklyAggregation$cameraAccesorryPropertionate)
-# consumerElectronicsDataForAnalysisWeeklyAggregation$investmentContentMarketing <- consumerElectronicsDataForAnalysisWeeklyAggregation$investmentContentMarketing*(consumerElectronicsDataForAnalysisWeeklyAggregation$cameraAccesorryPropertionate)
-# consumerElectronicsDataForAnalysisWeeklyAggregation$investmentOnlinemarketing <- consumerElectronicsDataForAnalysisWeeklyAggregation$investmentOnlinemarketing*(consumerElectronicsDataForAnalysisWeeklyAggregation$cameraAccesorryPropertionate)
-# consumerElectronicsDataForAnalysisWeeklyAggregation$investmentAffiliates <- consumerElectronicsDataForAnalysisWeeklyAggregation$investmentAffiliates*(consumerElectronicsDataForAnalysisWeeklyAggregation$cameraAccesorryPropertionate)
-# consumerElectronicsDataForAnalysisWeeklyAggregation$investmentSEM <- consumerElectronicsDataForAnalysisWeeklyAggregation$investmentSEM*(consumerElectronicsDataForAnalysisWeeklyAggregation$cameraAccesorryPropertionate)
-# consumerElectronicsDataForAnalysisWeeklyAggregation$investmentRadio <- consumerElectronicsDataForAnalysisWeeklyAggregation$investmentRadio*(consumerElectronicsDataForAnalysisWeeklyAggregation$cameraAccesorryPropertionate)
-# consumerElectronicsDataForAnalysisWeeklyAggregation$investmentOther <- consumerElectronicsDataForAnalysisWeeklyAggregation$investmentOther*(consumerElectronicsDataForAnalysisWeeklyAggregation$cameraAccesorryPropertionate)
-
 
 ################################################################################################################################################
 
