@@ -33,7 +33,14 @@ plotHist <- function(data_in, i) {
 ## Reusable function to plot box plots for given data set and ith column
 plotBox <- function(data_in, i) {
   data <- data.frame(x=data_in[[i]])
-  p <- ggplot(data=data) + geom_boxplot()
+  p <- ggplot(data=data, aes(x="", data)) + geom_boxplot()
+  return (p)
+}
+
+plotBoxWithSegmentsForGVM <- function(data_in, i) {
+  p <- ggplot(data=data_in, aes(x=factor(data_in[[i]]), gmv)) + 
+    geom_boxplot() + theme(axis.text.x = element_text(angle = 90, hjust =1)) + 
+    xlab(colnames(data_in)[i])
   return (p)
 }
 
@@ -116,6 +123,9 @@ nrow(distinct(consumerElectronicsData))
 
 consumerElectronicsData <- distinct(consumerElectronicsData)
 
+##boxplot.stats(consumerElectronicsData$gmv)
+##boxplot(consumerElectronicsData$gmv, outline = FALSE)
+
 ## End of load data sets
 ################################################################################################################################################
 
@@ -196,8 +206,10 @@ master_frame_categorical_variables_only[sapply(master_frame_categorical_variable
 ## Denstity plots for numeric variables
 ##doPlots(master_frame_numerical_variables_only, fun = plotDen, ii = 1:ncol(master_frame_numerical_variables_only), ncol = 5)
 
+doPlots(master_frame_numerical_variables_only, fun = plotDen, ii = 1:ncol(master_frame_numerical_variables_only), ncol = 5)
+
 ## Bar plots each categorical variables.
-doPlots(master_frame_categorical_variables_only, fun = plotBar, ii = 1:ncol(master_frame_categorical_variables_only), ncol = 2)
+doPlots(master_frame_numerical_variables_only, fun = plotBox, ii = 1:ncol(master_frame_numerical_variables_only), ncol = 2)
 
 ## End of Univariate Analysis
 ################################################################################################################################################
@@ -222,9 +234,8 @@ doPlots(data_corr, fun = plotCorrAgainstGmv, ii = 1:ncol(data_corr))
 ## End of Bivariate Analysis
 ################################################################################################################################################
 
-# Boxplots of numeric variables relative to gvm
-doPlots(cbind(master_frame_categorical_variables_only, gvm = consumerElectronicsDataForAnalysis$gmv), fun = plotBoxWithSegmentsForGVM, ii = 1:ncol(master_frame_categorical_variables_only), ncol = 5)
-
+# Boxplots of numeric variables relative to gmv
+doPlots(cbind(master_frame_categorical_variables_only, gmv = consumerElectronicsDataForAnalysis$gmv), fun = plotBoxWithSegmentsForGVM, ii = 1:ncol(master_frame_categorical_variables_only), ncol = 5)
 
 ################################################################################################################################################
 
