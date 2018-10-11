@@ -123,6 +123,13 @@ consumerElectronicsDataForAnalysis$day <- as.numeric(format(consumerElectronicsD
 consumerElectronicsDataForAnalysis <- distinct(consumerElectronicsDataForAnalysis)
 consumerElectronicsDataForAnalysis <- merge(consumerElectronicsDataForAnalysis, salesEventsWeeklyLevel, by = c("Year", "Month", "week"), all.x = TRUE)
 
+## Check for records with orders with revenue per unit more than MRP, negative SLA or product_procurement_sla. Filter accordingly
+nrow(consumerElectronicsDataForAnalysis %>% filter(offer_percentage < 0 | sla < 0 | product_procurement_sla < 0))
+
+nrow(consumerElectronicsDataForAnalysis)
+consumerElectronicsDataForAnalysis <- consumerElectronicsDataForAnalysis %>% filter(offer_percentage >= 0 & sla >= 0 & product_procurement_sla >= 0)
+nrow(consumerElectronicsDataForAnalysis)
+
 consumerElectronicsDataForAnalysisForAggregation <- subset(consumerElectronicsDataForAnalysis, select = -c(X.U.FEFF.fsn_id, order_date)) %>% filter(product_analytic_sub_category == "CameraAccessory" )
 
 categorical_variables_indexes <- as.integer(which(sapply(consumerElectronicsDataForAnalysisForAggregation, is.character)))

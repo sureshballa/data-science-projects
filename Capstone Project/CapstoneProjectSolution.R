@@ -148,6 +148,13 @@ colnames(consumerElectronicsDataForAnalysis)
 
 consumerElectronicsDataForAnalysis <- subset(consumerElectronicsDataForAnalysis, select = -c(`95%`, `05%`))
 
+## Check for records with orders with revenue per unit more than MRP, negative SLA or product_procurement_sla. Filter accordingly
+nrow(consumerElectronicsDataForAnalysis %>% filter(offer_percentage < 0 | sla < 0 | product_procurement_sla < 0))
+
+nrow(consumerElectronicsDataForAnalysis)
+consumerElectronicsDataForAnalysis <- consumerElectronicsDataForAnalysis %>% filter(offer_percentage >= 0 & sla >= 0 & product_procurement_sla >= 0)
+nrow(consumerElectronicsDataForAnalysis)
+
 ## Handling of NA's
 NA.proportion <- function(x) mean(is.na(x))
 table(NA.proportion=round(sapply(consumerElectronicsDataForAnalysis, NA.proportion), 2))

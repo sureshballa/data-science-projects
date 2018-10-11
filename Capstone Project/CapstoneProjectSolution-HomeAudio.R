@@ -124,6 +124,13 @@ consumerElectronicsDataForAnalysis <- merge(consumerElectronicsDataForAnalysis, 
 
 ################################################################################################################################################
 
+## Check for records with orders with revenue per unit more than MRP, negative SLA or product_procurement_sla. Filter accordingly
+nrow(consumerElectronicsDataForAnalysis %>% filter(offer_percentage < 0 | sla < 0 | product_procurement_sla < 0))
+
+nrow(consumerElectronicsDataForAnalysis)
+consumerElectronicsDataForAnalysis <- consumerElectronicsDataForAnalysis %>% filter(offer_percentage >= 0 & sla >= 0 & product_procurement_sla >= 0)
+nrow(consumerElectronicsDataForAnalysis)
+
 consumerElectronicsDataForAnalysisForAggregation <- subset(consumerElectronicsDataForAnalysis, select = -c(X.U.FEFF.fsn_id, order_date)) %>% filter(product_analytic_sub_category == "HomeAudio" )
 
 categorical_variables_indexes <- as.integer(which(sapply(consumerElectronicsDataForAnalysisForAggregation, is.character)))
