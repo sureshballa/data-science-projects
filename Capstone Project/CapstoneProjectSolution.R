@@ -135,7 +135,18 @@ consumerElectronicsData$Month <- as.numeric(consumerElectronicsData$Month)
 consumerElectronicsData$Year <- as.numeric(consumerElectronicsData$Year)
 consumerElectronicsDataForAnalysis <- consumerElectronicsData %>% filter((Year == 2015 & Month >= 7) | (Year == 2016 & Month <= 6))
 consumerElectronicsDataForAnalysis <- consumerElectronicsDataForAnalysis %>% filter(product_analytic_sub_category == "GamingAccessory" | product_analytic_sub_category == "CameraAccessory" | product_analytic_sub_category == "HomeAudio")
-consumerElectronicsDataForAnalysis$offer_price = consumerElectronicsDataForAnalysis$product_mrp**consumerElectronicsDataForAnalysis$units - consumerElectronicsDataForAnalysis$gmv
+consumerElectronicsDataForAnalysis$offer_percentage = (consumerElectronicsDataForAnalysis$product_mrp*consumerElectronicsDataForAnalysis$units - consumerElectronicsDataForAnalysis$gmv)/consumerElectronicsDataForAnalysis$product_mrp*consumerElectronicsDataForAnalysis$units
+
+## Lets calculate if a product is premium or not based on its MRP in its own category
+
+products_quantiles <- consumerElectronicsDataForAnalysis %>% group_by(product_analytic_category, product_analytic_sub_category, product_analytic_vertical) %>% summarise(`95%`=quantile(product_mrp, probs=0.95), `05%`=quantile(product_mrp, probs=0.05))
+
+consumerElectronicsDataForAnalysis <- merge(consumerElectronicsDataForAnalysis, products_quantiles, all.x = TRUE)
+consumerElectronicsDataForAnalysis$product_mrp_class <- ifelse(consumerElectronicsDataForAnalysis$product_mrp >= consumerElectronicsDataForAnalysis$`95%`, "premium", ifelse(consumerElectronicsDataForAnalysis$product_mrp < consumerElectronicsDataForAnalysis$`05%`, "cheap", "medium"))
+
+colnames(consumerElectronicsDataForAnalysis)
+
+consumerElectronicsDataForAnalysis <- subset(consumerElectronicsDataForAnalysis, select = -c(`95%`, `05%`))
 
 ## Handling of NA's
 NA.proportion <- function(x) mean(is.na(x))
@@ -260,8 +271,8 @@ consumerElectronicsDataForAnalysisForAggregation <- subset(consumerElectronicsDa
 
 categorical_variables_indexes <- as.integer(which(sapply(consumerElectronicsDataForAnalysisForAggregation, is.character)))
 
-weekAggregationSplit1 <- consumerElectronicsDataForAnalysisForAggregation %>% dplyr::select(Year, week, gmv, product_mrp, offer_price) %>% group_by(Year, week) %>% summarise_all(funs(sum), na.rm = TRUE)
-weekAggregationSplit2 <- consumerElectronicsDataForAnalysisForAggregation %>% dplyr::select(Year, week, deliverycdays, deliverybdays, product_procurement_sla) %>% group_by(Year, week) %>% summarise_all(funs(mean), na.rm = TRUE)
+weekAggregationSplit1 <- consumerElectronicsDataForAnalysisForAggregation %>% dplyr::select(Year, week, gmv, product_mrp) %>% group_by(Year, week) %>% summarise_all(funs(sum), na.rm = TRUE)
+weekAggregationSplit2 <- consumerElectronicsDataForAnalysisForAggregation %>% dplyr::select(Year, week, deliverycdays, deliverybdays, product_procurement_sla, offer_percentage) %>% group_by(Year, week) %>% summarise_all(funs(mean), na.rm = TRUE)
 
 consumerElectronicsDataForAnalysisWeeklyAggregation <- merge(weekAggregationSplit1, weekAggregationSplit2, by = c("Year", "week"), all.x=TRUE)
 
