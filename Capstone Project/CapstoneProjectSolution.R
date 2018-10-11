@@ -139,21 +139,22 @@ consumerElectronicsDataForAnalysis$offer_percentage = (consumerElectronicsDataFo
 
 ## Lets calculate if a product is premium or not based on its MRP in its own category
 
-products_quantiles <- consumerElectronicsDataForAnalysis %>% group_by(product_analytic_category, product_analytic_sub_category, product_analytic_vertical) %>% summarise(`95%`=quantile(product_mrp, probs=0.95), `05%`=quantile(product_mrp, probs=0.05))
+products_quantiles <- consumerElectronicsDataForAnalysis %>% group_by(product_analytic_category, product_analytic_sub_category, product_analytic_vertical) %>% summarise(`75%`=quantile(product_mrp, probs=0.75), `25%`=quantile(product_mrp, probs=0.25))
 
 consumerElectronicsDataForAnalysis <- merge(consumerElectronicsDataForAnalysis, products_quantiles, all.x = TRUE)
-consumerElectronicsDataForAnalysis$product_mrp_class <- ifelse(consumerElectronicsDataForAnalysis$product_mrp >= consumerElectronicsDataForAnalysis$`95%`, "premium", ifelse(consumerElectronicsDataForAnalysis$product_mrp < consumerElectronicsDataForAnalysis$`05%`, "cheap", "medium"))
+consumerElectronicsDataForAnalysis$product_mrp_class <- ifelse(consumerElectronicsDataForAnalysis$product_mrp >= consumerElectronicsDataForAnalysis$`75%`, "premium", ifelse(consumerElectronicsDataForAnalysis$product_mrp < consumerElectronicsDataForAnalysis$`25%`, "cheap", "medium"))
 
 colnames(consumerElectronicsDataForAnalysis)
 
-consumerElectronicsDataForAnalysis <- subset(consumerElectronicsDataForAnalysis, select = -c(`95%`, `05%`))
+consumerElectronicsDataForAnalysis <- subset(consumerElectronicsDataForAnalysis, select = -c(`75%`, `25%`))
 
-## Check for records with orders with revenue per unit more than MRP, negative SLA or product_procurement_sla. Filter accordingly
+## Check for records with orders with revenue per unit more than MRP, negative SLA or product_procurement_sla. Cap the GMV accordingly so we do not loose revenue as we budget for all days in a month
 nrow(consumerElectronicsDataForAnalysis %>% filter(offer_percentage < 0 | sla < 0 | product_procurement_sla < 0))
-
-nrow(consumerElectronicsDataForAnalysis)
-consumerElectronicsDataForAnalysis <- consumerElectronicsDataForAnalysis %>% filter(offer_percentage >= 0 & sla >= 0 & product_procurement_sla >= 0)
-nrow(consumerElectronicsDataForAnalysis)
+consumerElectronicsDataForAnalysis$gmv = ifelse(consumerElectronicsDataForAnalysis$offer_percentage < 0, consumerElectronicsDataForAnalysis$product_mrp*consumerElectronicsDataForAnalysis$units, consumerElectronicsDataForAnalysis$gmv)
+consumerElectronicsDataForAnalysis$sla = ifelse(consumerElectronicsDataForAnalysis$sla < 0, NULL, consumerElectronicsDataForAnalysis$sla)
+consumerElectronicsDataForAnalysis$product_procurement_sla = ifelse(consumerElectronicsDataForAnalysis$product_procurement_sla < 0, 0, consumerElectronicsDataForAnalysis$product_procurement_sla)
+consumerElectronicsDataForAnalysis$offer_percentage = ifelse(consumerElectronicsDataForAnalysis$offer_percentage < 0, 0, consumerElectronicsDataForAnalysis$offer_percentage)
+nrow(consumerElectronicsDataForAnalysis %>% filter(offer_percentage < 0 | sla < 0 | product_procurement_sla < 0))
 
 ## Handling of NA's
 NA.proportion <- function(x) mean(is.na(x))
@@ -297,8 +298,8 @@ for (category_variable_index in categorical_variables_indexes) {
   remove(temp)
 }
 
-consumerElectronicsDataForAnalysisWeeklyAggregation <- merge(consumerElectronicsDataForAnalysisWeeklyAggregation, npsWeeklyLevel, by = c("Year", "week"), all.x = TRUE)
-consumerElectronicsDataForAnalysisWeeklyAggregation <- merge(consumerElectronicsDataForAnalysisWeeklyAggregation, budgetAllocationsWeekly, by = c("Year", "week"), all.x = TRUE)
+consumerElectronicsDataForAnalysisWeeklyAggregation <- merge(consumerElectronicsDataForAnalysisWeeklyAggregation, npsWeeklyLevel, by = c("Year", "week"), all = TRUE)
+consumerElectronicsDataForAnalysisWeeklyAggregation <- merge(consumerElectronicsDataForAnalysisWeeklyAggregation, budgetAllocationsWeekly, by = c("Year", "week"), all = TRUE)
 
 nrow(consumerElectronicsDataForAnalysisWeeklyAggregation)
 
