@@ -216,12 +216,15 @@ doPlots(data_corr_weekly_only_for_investments, fun = plotCorrAgainstRevenueGmv, 
 
 dataset_final_analysis <- consumerElectronicsDataForAnalysisWeeklyAggregation
 colnames(dataset_final_analysis)
+dataset_final_analysis <- dataset_final_analysis[-c(9:21)]
+dataset_final_analysis <- dataset_final_analysis[-c(4)]
 #View(dataset_final_analysis)
 
 is.nan.data.frame <- function(x)
   do.call(cbind, lapply(x, is.nan))
 
 dataset_final_analysis[is.nan(dataset_final_analysis)] <- 0
+dataset_final_analysis[is.na(dataset_final_analysis)] <- 0
 
 
 # separate training and testing data
@@ -231,22 +234,16 @@ train = dataset_final_analysis[trainindices,]
 test = dataset_final_analysis[-trainindices,]
 
 # Build model 1 containing all variables
-model_1 <-lm(gmv ~ Year + week + EventBSD_sum_sum + EventDiwali_sum_sum + EventEid...Rathayatra_sum_sum + 
-               EventPacman_sum_sum + EventVday_sum_sum + deliverybdays_mean + NPS_WeekAvg + investment + 
-               investmentDigital + investmentContentMarketing + investmentAffiliates + investmentRadio +
-               Other.1 + EventChristmas...New.Year_sum_sum + EventDussehra_sum_sum + EventFHSD_sum_sum +
-               EventRepublic_sum_sum + deliverycdays_mean + investmentTV + investmentSponsorship + 
-               investmentOnlinemarketing + investmentSEM + investmentOther
-                ,data=train)
+model_1 <-lm(gmv ~ .,data=train)
 summary(model_1)
 
 step <- stepAIC(model_1, direction="both")
 step
 
-model_2 <- lm(formula = gmv ~ EventDiwali_sum_sum + EventVday_sum_sum + 
-                NPS_WeekAvg + investment + investmentRadio + EventChristmas...New.Year_sum_sum + 
-                EventDussehra_sum_sum + investmentTV + investmentSponsorship, 
-                data = train)
+model_2 <- lm(formula = gmv ~ week + investment + investmentTV + investmentDigital + 
+                investmentSponsorship + investmentContentMarketing + investmentOnlinemarketing + 
+                investmentAffiliates + investmentSEM + investmentRadio + 
+                investmentOther, data = train)
 
 #let's check the summary of the model for R-squared and Adjusted R-squared
 summary(model_2)
@@ -258,11 +255,11 @@ vif(model_2)
 
 #-------------------------------------------------
 
-#NPS_WeekAvg
-model_3 <- lm(formula = gmv ~ EventDiwali_sum_sum + EventVday_sum_sum + 
-                investment + investmentRadio + EventChristmas...New.Year_sum_sum + 
-                EventDussehra_sum_sum + investmentTV + investmentSponsorship, 
-              data = train)
+#investmentSEM
+model_3 <- lm(formula = gmv ~ week + investment + investmentTV + investmentDigital + 
+                investmentSponsorship + investmentContentMarketing + investmentOnlinemarketing + 
+                investmentAffiliates + investmentRadio + 
+                investmentOther, data = train)
 
 #let's check the summary of the model for R-squared and Adjusted R-squared
 summary(model_3)
@@ -273,18 +270,58 @@ vif(model_3)
 
 
 #-------------------------------------------------
-#investmentSponsorship
-model_4 <- lm(formula = gmv ~ EventDiwali_sum_sum + EventVday_sum_sum + 
-                investment + investmentRadio + EventChristmas...New.Year_sum_sum + 
-                EventDussehra_sum_sum + investmentTV + investmentSponsorship, 
-              data = train)
-
+#investmentOnlinemarketing
+model_4 <- lm(formula = gmv ~ week + investment + investmentTV + investmentDigital + 
+                investmentSponsorship + investmentContentMarketing + 
+                investmentAffiliates + investmentRadio + 
+                investmentOther, data = train)
 summary(model_4)
+vif(model_4)
 
+
+
+#investmentOther
+model_5 <- lm(formula = gmv ~ week + investment + investmentTV + investmentDigital + 
+                investmentSponsorship + investmentContentMarketing + 
+                investmentAffiliates + investmentRadio
+                , data = train)
+summary(model_5)
+vif(model_5)
+#investmentAffiliates
+
+model_6<- lm(formula = gmv ~ week + investment + investmentTV + investmentDigital + 
+                investmentSponsorship + investmentContentMarketing + 
+                investmentRadio
+              , data = train)
+summary(model_6)
+vif(model_6)
+
+
+#investmentContentMarketing
+
+model_6<- lm(formula = gmv ~ week + investment + investmentTV + investmentDigital + 
+               investmentSponsorship + 
+               investmentRadio
+             , data = train)
+summary(model_6)
+
+#investmentDigital
+model_7<- lm(formula = gmv ~ week + investment + investmentTV + 
+               investmentSponsorship + 
+               investmentRadio
+             , data = train)
+summary(model_7)
+
+#week
+model_7<- lm(formula = gmv ~ investment + investmentTV + 
+               investmentSponsorship + 
+               investmentRadio
+             , data = train)
+summary(model_7)
 # ----- let's test  the model ------
 
 # predicting the results in test dataset
-Predict_1 <- predict(model_4,test)
+Predict_1 <- predict(model_7,test)
 test$test_gmv <- Predict_1
 View(test)
 # Now, we need to test the r square between actual and predicted sales. 

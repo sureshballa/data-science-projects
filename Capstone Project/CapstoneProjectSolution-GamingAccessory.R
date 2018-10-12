@@ -214,113 +214,74 @@ dataset_final_analysis <- consumerElectronicsDataForAnalysisWeeklyAggregation
 colnames(dataset_final_analysis)
 #View(dataset_final_analysis)
 
+
+
+
 is.nan.data.frame <- function(x)
   do.call(cbind, lapply(x, is.nan))
 
 dataset_final_analysis[is.nan(dataset_final_analysis)] <- 0
+dataset_final_analysis[is.na(dataset_final_analysis)] <- 0
 
 
+dataset_final_analysis <- dataset_final_analysis[-c(9:26)]
+dataset_final_analysis <- dataset_final_analysis[-c(4)]
 # separate training and testing data
 set.seed(100)
 trainindices= sample(1:nrow(dataset_final_analysis), 0.8*nrow(dataset_final_analysis))
 train = dataset_final_analysis[trainindices,]
 test = dataset_final_analysis[-trainindices,]
 
-model_1 <-lm(gmv ~ Year + week + EventBSD_sum_sum + EventDiwali_sum_sum + EventEid...Rathayatra_sum_sum + 
-               EventPacman_sum_sum + EventVday_sum_sum + deliverybdays_mean + NPS_WeekAvg + investment + 
-               investmentDigital + investmentContentMarketing + investmentAffiliates + investmentRadio +
-               Other.1 + EventChristmas...New.Year_sum_sum + EventDussehra_sum_sum + EventFHSD_sum_sum +
-               EventRepublic_sum_sum + deliverycdays_mean + investmentTV + investmentSponsorship + 
-               investmentOnlinemarketing + investmentSEM + investmentOther
-             ,data=train)
+model_1 <-lm(gmv ~ .,data=train)
 summary(model_1)
 
 step <- stepAIC(model_1, direction="both")
 step
 
-model_2 <- lm(formula = gmv ~ Year + week + EventBSD_sum_sum + EventPacman_sum_sum + 
-     deliverybdays_mean + investmentDigital + investmentContentMarketing + 
-     investmentAffiliates + investmentRadio + Other.1 + EventChristmas...New.Year_sum_sum + 
-     EventDussehra_sum_sum + EventRepublic_sum_sum + investmentTV + 
-     investmentSponsorship + investmentOnlinemarketing + investmentSEM, 
-     data = train)
+model_2 <- lm(formula = gmv ~ Year + deliverybdays + product_procurement_sla + 
+                offer_percentage + investment + investmentTV + investmentDigital + 
+                investmentContentMarketing + investmentOnlinemarketing + 
+                investmentAffiliates + investmentSEM + investmentRadio + 
+                investmentOther, data = train)
 summary(model_2)
 
 
 vif(model_2)
 
-#EventChristmas...New.Year_sum_sum
+#deliverybdays
 
-
-model_3 <- lm(formula = gmv ~ Year + week + EventBSD_sum_sum + EventPacman_sum_sum + 
-                deliverybdays_mean + investmentDigital + investmentContentMarketing + 
-                investmentAffiliates + investmentRadio + Other.1 +
-                EventDussehra_sum_sum + EventRepublic_sum_sum + investmentTV + 
-                investmentSponsorship + investmentOnlinemarketing + investmentSEM, 
-              data = train)
+model_3 <- lm(formula = gmv ~ Year + product_procurement_sla + 
+                offer_percentage + investment + investmentTV + investmentDigital + 
+                investmentContentMarketing + investmentOnlinemarketing + 
+                investmentAffiliates + investmentSEM + investmentRadio + 
+                investmentOther, data = train)
 summary(model_3)
 
 
 vif(model_3)
-#EventPacman_sum_sum
+#offer_percentage
 
-model_4 <- lm(formula = gmv ~ Year + week + EventBSD_sum_sum + 
-                deliverybdays_mean + investmentDigital + investmentContentMarketing + 
-                investmentAffiliates + investmentRadio + Other.1 +
-                EventDussehra_sum_sum + EventRepublic_sum_sum + investmentTV + 
-                investmentSponsorship + investmentOnlinemarketing + investmentSEM, 
-              data = train)
+model_4 <- lm(formula = gmv ~ Year + product_procurement_sla + 
+                investment + investmentTV + investmentDigital + 
+                investmentContentMarketing + investmentOnlinemarketing + 
+                investmentAffiliates + investmentSEM + investmentRadio + 
+                investmentOther, data = train)
 summary(model_4)
 
+#investment
 
-vif(model_4)
-
-#deliverybdays_mean
-
-model_5 <- lm(formula = gmv ~ Year + week + EventBSD_sum_sum + 
-                investmentDigital + investmentContentMarketing + 
-                investmentAffiliates + investmentRadio + Other.1 +
-                EventDussehra_sum_sum + EventRepublic_sum_sum + investmentTV + 
-                investmentSponsorship + investmentOnlinemarketing + investmentSEM, 
-              data = train)
+model_5 <- lm(formula = gmv ~ Year + product_procurement_sla + 
+                investmentTV + investmentDigital + 
+                investmentContentMarketing + investmentOnlinemarketing + 
+                investmentAffiliates + investmentSEM + investmentRadio + 
+                investmentOther, data = train)
 summary(model_5)
 
 
 vif(model_5)
-#EventBSD_sum_sum
-model_6 <- lm(formula = gmv ~ Year + week + 
-                investmentDigital + investmentContentMarketing + 
-                investmentAffiliates + investmentRadio + Other.1 +
-                EventDussehra_sum_sum + EventRepublic_sum_sum + investmentTV + 
-                investmentSponsorship + investmentOnlinemarketing + investmentSEM, 
-              data = train)
-summary(model_6)
-
-
-vif(model_6)
-
-
-#investmentSponsorship
-
-model_7 <- lm(formula = gmv ~ Year + week + 
-                investmentDigital + investmentContentMarketing + 
-                investmentAffiliates + investmentRadio + Other.1 +
-                EventDussehra_sum_sum + EventRepublic_sum_sum + investmentTV + 
-                investmentOnlinemarketing + investmentSEM, 
-              data = train)
-summary(model_7)
-
-#week
-model_8 <- lm(formula = gmv ~ Year + week + 
-                investmentDigital + investmentContentMarketing + 
-                investmentAffiliates + investmentRadio + Other.1 +
-                EventDussehra_sum_sum + EventRepublic_sum_sum + investmentTV + 
-                investmentOnlinemarketing + investmentSEM, 
-              data = train)
-summary(model_8)
 
 # predicting the results in test dataset
-Predict_1 <- predict(model_8,test)
+Predict_1 <- predict(model_5,test)
 test$test_gmv <- Predict_1
 View(test)
 # Now, we need to test the r square between actual and predicted sales. 
@@ -328,5 +289,3 @@ r <- cor(test$gmv,test$test_gmv)
 rsquared <- cor(test$gmv,test$test_gmv)^2
 rsquared
 # 
-
-
