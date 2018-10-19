@@ -220,8 +220,8 @@ colnames(dataset_final_analysis)
 is.nan.data.frame <- function(x)
   do.call(cbind, lapply(x, is.nan))
 
-dataset_final_analysis[is.nan(dataset_final_analysis)] <- 0
-dataset_final_analysis[is.na(dataset_final_analysis)] <- 0
+dataset_final_analysis[is.nan(dataset_final_analysis)] <- 0.01
+dataset_final_analysis[is.na(dataset_final_analysis)] <- 0.01
 
 
 dataset_final_analysis <- dataset_final_analysis[-c(9:26)]
@@ -289,3 +289,233 @@ r <- cor(test$gmv,test$test_gmv)
 rsquared <- cor(test$gmv,test$test_gmv)^2
 rsquared
 # 
+
+#######multiplicative model
+
+
+
+log_data_set <- log(dataset_final_analysis)
+log_data_set[mapply(is.infinite, log_data_set)] <- 1
+
+model_1 <- lm(gmv~.,log_data_set)
+
+summary(model_1)
+
+step <- stepAIC(model_1, direction="both")
+step
+
+
+model_2 <- lm(formula = gmv ~ Year + offer_percentage + s1_fact.order_payment_type_COD + 
+                product_mrp_class_medium + product_mrp_class_premium + Event_BED + 
+                Event_BSD + `Event_Christmas & New Year` + Event_Diwali + 
+                Event_Dussehra + `Event_Eid & Rathayatra` + Event_FHSD + 
+                Event_Independence + Event_NA + Event_Pacman + Event_Rakshabandhan + 
+                Event_Republic + Event_Vday + NPS_WeekAvg + investmentTV + 
+                investmentDigital + investmentSponsorship + investmentContentMarketing + 
+                investmentOnlinemarketing + investmentAffiliates + investmentSEM + 
+                investmentRadio + investmentOther, data = log_data_set)
+
+summary(model_2)
+vif(model_2)
+
+
+#Event_Vday
+
+model_3 <- lm(formula = gmv ~ Year + offer_percentage + s1_fact.order_payment_type_COD + 
+                product_mrp_class_medium + product_mrp_class_premium + Event_BED + 
+                Event_BSD + `Event_Christmas & New Year` + Event_Diwali + 
+                Event_Dussehra + `Event_Eid & Rathayatra` + Event_FHSD + 
+                Event_Independence + Event_NA + Event_Pacman + Event_Rakshabandhan + 
+                Event_Republic + NPS_WeekAvg + investmentTV + 
+                investmentDigital + investmentSponsorship + investmentContentMarketing + 
+                investmentOnlinemarketing + investmentAffiliates + investmentSEM + 
+                investmentRadio + investmentOther, data = log_data_set)
+
+summary(model_3)
+vif(model_3)
+#`Event_Christmas & New Year`
+
+model_4 <- lm(formula = gmv ~ Year + offer_percentage + s1_fact.order_payment_type_COD + 
+                product_mrp_class_medium + product_mrp_class_premium + Event_BED + 
+                Event_BSD + Event_Diwali + 
+                Event_Dussehra + `Event_Eid & Rathayatra` + Event_FHSD + 
+                Event_Independence + Event_NA + Event_Pacman + Event_Rakshabandhan + 
+                Event_Republic + NPS_WeekAvg + investmentTV + 
+                investmentDigital + investmentSponsorship + investmentContentMarketing + 
+                investmentOnlinemarketing + investmentAffiliates + investmentSEM + 
+                investmentRadio + investmentOther, data = log_data_set)
+
+summary(model_4)
+vif(model_4)
+
+# Event_BED,`Event_Eid & Rathayatra`
+
+model_4 <- lm(formula = gmv ~ Year + offer_percentage + s1_fact.order_payment_type_COD + 
+                product_mrp_class_medium + product_mrp_class_premium + 
+                Event_BSD + Event_Diwali + 
+                Event_Dussehra  + Event_FHSD + 
+                Event_Independence + Event_NA + Event_Pacman + Event_Rakshabandhan + 
+                Event_Republic + NPS_WeekAvg + investmentTV + 
+                investmentDigital + investmentSponsorship + investmentContentMarketing + 
+                investmentOnlinemarketing + investmentAffiliates + investmentSEM + 
+                investmentRadio + investmentOther, data = log_data_set)
+
+summary(model_4)
+
+#Event_Republic
+
+model_5 <- lm(formula = gmv ~ Year + offer_percentage + s1_fact.order_payment_type_COD + 
+                product_mrp_class_medium + product_mrp_class_premium + 
+                Event_BSD + Event_Diwali + 
+                Event_Dussehra  + Event_FHSD + 
+                Event_Independence + Event_NA + Event_Pacman + Event_Rakshabandhan + 
+                NPS_WeekAvg + investmentTV + 
+                investmentDigital + investmentSponsorship + investmentContentMarketing + 
+                investmentOnlinemarketing + investmentAffiliates + investmentSEM + 
+                investmentRadio + investmentOther, data = log_data_set)
+
+summary(model_5)
+ 
+#Event_Republic
+
+model_5 <- lm(formula = gmv ~ Year + offer_percentage + s1_fact.order_payment_type_COD + 
+                product_mrp_class_medium + product_mrp_class_premium + 
+                Event_BSD + Event_Diwali + 
+                Event_Dussehra  + Event_FHSD + 
+                Event_Independence + Event_NA + Event_Pacman + Event_Rakshabandhan + 
+                NPS_WeekAvg + investmentTV + 
+                investmentDigital + investmentSponsorship + investmentContentMarketing + 
+                investmentOnlinemarketing + investmentAffiliates + investmentSEM + 
+                investmentRadio + investmentOther, data = log_data_set)
+
+summary(model_5)
+#Event_BSD
+model_6 <- lm(formula = gmv ~ Year + offer_percentage + s1_fact.order_payment_type_COD + 
+                product_mrp_class_medium + product_mrp_class_premium + 
+                Event_Diwali + 
+                Event_Dussehra  + Event_FHSD + 
+                Event_Independence + Event_NA + Event_Pacman + Event_Rakshabandhan + 
+                NPS_WeekAvg + investmentTV + 
+                investmentDigital + investmentSponsorship + investmentContentMarketing + 
+                investmentOnlinemarketing + investmentAffiliates + investmentSEM + 
+                investmentRadio + investmentOther, data = log_data_set)
+
+summary(model_6)
+
+#Event_FHSD
+
+model_7 <- lm(formula = gmv ~ Year + offer_percentage + s1_fact.order_payment_type_COD + 
+                product_mrp_class_medium + product_mrp_class_premium + 
+                Event_Diwali + 
+                Event_Dussehra + 
+                Event_Independence + Event_NA + Event_Pacman + Event_Rakshabandhan + 
+                NPS_WeekAvg + investmentTV + 
+                investmentDigital + investmentSponsorship + investmentContentMarketing + 
+                investmentOnlinemarketing + investmentAffiliates + investmentSEM + 
+                investmentRadio + investmentOther, data = log_data_set)
+
+summary(model_7)
+
+#Event_NA
+
+model_8 <- lm(formula = gmv ~ Year + offer_percentage + s1_fact.order_payment_type_COD + 
+                product_mrp_class_medium + product_mrp_class_premium + 
+                Event_Diwali + 
+                Event_Dussehra + 
+                Event_Independence + Event_Pacman + Event_Rakshabandhan + 
+                NPS_WeekAvg + investmentTV + 
+                investmentDigital + investmentSponsorship + investmentContentMarketing + 
+                investmentOnlinemarketing + investmentAffiliates + investmentSEM + 
+                investmentRadio + investmentOther, data = log_data_set)
+
+summary(model_8)
+
+#Event_Pacman, Event_Dussehra
+model_9 <- lm(formula = gmv ~ Year + offer_percentage + s1_fact.order_payment_type_COD + 
+                product_mrp_class_medium + product_mrp_class_premium + 
+                Event_Diwali + 
+                Event_Independence  + Event_Rakshabandhan + 
+                NPS_WeekAvg + investmentTV + 
+                investmentDigital + investmentSponsorship + investmentContentMarketing + 
+                investmentOnlinemarketing + investmentAffiliates + investmentSEM + 
+                investmentRadio + investmentOther, data = log_data_set)
+
+summary(model_9)
+
+#Event_Diwali, investmentAffiliates
+model_10<- lm(formula = gmv ~ Year + offer_percentage + s1_fact.order_payment_type_COD + 
+                product_mrp_class_medium + product_mrp_class_premium + 
+                Event_Independence  + Event_Rakshabandhan + 
+                NPS_WeekAvg + investmentTV + 
+                investmentDigital + investmentSponsorship + investmentContentMarketing + 
+                investmentOnlinemarketing + investmentSEM + 
+                investmentRadio + investmentOther, data = log_data_set)
+
+summary(model_10)
+
+#investmentSEM, investmentDigital, investmentSponsorship
+model_10<- lm(formula = gmv ~ Year + offer_percentage + s1_fact.order_payment_type_COD + 
+                product_mrp_class_medium + product_mrp_class_premium + 
+                Event_Independence  + Event_Rakshabandhan + 
+                NPS_WeekAvg + investmentTV + 
+                investmentContentMarketing + 
+                investmentOnlinemarketing + 
+                investmentRadio + investmentOther, data = log_data_set)
+
+summary(model_10)
+#NPS_WeekAvg, 
+
+model_11<- lm(formula = gmv ~ Year + offer_percentage + s1_fact.order_payment_type_COD + 
+                product_mrp_class_medium + product_mrp_class_premium + 
+                Event_Independence  + Event_Rakshabandhan + 
+                investmentTV + 
+                investmentOnlinemarketing + 
+                investmentRadio + investmentOther, data = log_data_set)
+
+summary(model_11)
+
+#Event_Independence, product_mrp_class_medium, Event_Rakshabandhan
+model_12<- lm(formula = gmv ~ Year + offer_percentage + s1_fact.order_payment_type_COD + 
+                product_mrp_class_premium + 
+                investmentTV + 
+                investmentOnlinemarketing + 
+                investmentRadio + investmentOther, data = log_data_set)
+
+summary(model_12)
+
+#product_mrp_class_premium
+
+model_13<- lm(formula = gmv ~ Year + offer_percentage + s1_fact.order_payment_type_COD + 
+                investmentTV + 
+                investmentOnlinemarketing + 
+                investmentRadio + investmentOther, data = log_data_set)
+
+summary(model_13)
+
+#offer_percentage
+model_14<- lm(formula = gmv ~ Year + s1_fact.order_payment_type_COD + 
+                investmentTV + 
+                investmentOnlinemarketing + 
+                investmentRadio + investmentOther, data = log_data_set)
+
+summary(model_14)
+
+
+
+#Year
+model_15<- lm(formula = gmv ~ s1_fact.order_payment_type_COD + 
+                investmentTV + 
+                investmentOnlinemarketing + 
+                investmentRadio + investmentOther, data = log_data_set)
+
+summary(model_15)
+
+
+Predict_1 <- predict(model_15,log_data_set)
+log_data_set$test_gmv <- Predict_1
+#View(test)
+# Now, we need to test the r square between actual and predicted sales. 
+r <- cor(log_data_set$gmv,log_data_set$test_gmv)
+rsquared <- cor(log_data_set$gmv,log_data_set$test_gmv)^2
+rsquared
+
