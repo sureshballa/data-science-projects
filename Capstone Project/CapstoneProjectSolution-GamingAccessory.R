@@ -661,9 +661,9 @@ mult_Dis_Model <- dataset_final_analysis
 
 mult_Dis_model_1 <- slide(mult_Dis_Model, Var = "gmv",slideBy = -1)
 
-Dis_model_1 <- slide(mult_Dis_model_1, Var = "gmv",slideBy = -2)
+mult_Dis_model_1 <- slide(mult_Dis_model_1, Var = "gmv",slideBy = -2)
 
-Dis_model_1 <- slide(mult_Dis_model_1, Var = "gmv",slideBy = -3)
+mult_Dis_model_1 <- slide(mult_Dis_model_1, Var = "gmv",slideBy = -3)
 
 mult_Dis_model_1[is.nan(mult_Dis_model_1)] <- 0.01
 mult_Dis_model_1[is.na(mult_Dis_model_1)] <- 0.01

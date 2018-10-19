@@ -212,7 +212,7 @@ doPlots(data_corr_weekly_only_for_investments, fun = plotCorrAgainstRevenueGmv, 
 
 ################################################################################################################################################
 
-##---------------- Start: Linear Regression model -------------##
+
 
 dataset_final_analysis <- consumerElectronicsDataForAnalysisWeeklyAggregation
 colnames(dataset_final_analysis)
@@ -223,15 +223,20 @@ dataset_final_analysis <- dataset_final_analysis[-c(4)]
 is.nan.data.frame <- function(x)
   do.call(cbind, lapply(x, is.nan))
 
-dataset_final_analysis[is.nan(dataset_final_analysis)] <- 0.01
-dataset_final_analysis[is.na(dataset_final_analysis)] <- 0.01
+
+##---------------- Start: Linear Regression model -------------##
+
+linear_data_set <- dataset_final_analysis
+
+linear_data_set[is.nan(linear_data_set)] <- 0
+linear_data_set[is.na(linear_data_set)] <- 0
 
 
 # separate training and testing data
 set.seed(100)
-trainindices= sample(1:nrow(dataset_final_analysis), 0.8*nrow(dataset_final_analysis))
-train = dataset_final_analysis[trainindices,]
-test = dataset_final_analysis[-trainindices,]
+trainindices= sample(1:nrow(linear_data_set), 0.8*nrow(linear_data_set))
+train = linear_data_set[trainindices,]
+test = linear_data_set[-trainindices,]
 
 # Build model 1 containing all variables
 model_1 <-lm(gmv ~ .,data=train)
@@ -337,9 +342,13 @@ rsquared
 
 ##started multiplicative model
 
-dataset_final_analysis <log(dataset_final_analysis)
+log_date_set <- dataset_final_analysis
+log_date_set[is.nan(log_date_set)] <- 0
+log_date_set[is.na(log_date_set)] <- 0
 
-model_1 <- lm(gmv~.,dataset_final_analysis)
+log_date_set <log(log_date_set)
+
+model_1 <- lm(gmv~.,log_date_set)
 
 summary(model_1)
 
@@ -353,7 +362,7 @@ model_2 <- lm(formula = gmv ~ Year + week + deliverycdays + product_procurement_
                 Event_Dussehra + `Event_Eid & Rathayatra` + Event_FHSD + 
                 Event_NA + Event_Pacman + Event_Republic + Event_Vday + investment + 
                 investmentTV + investmentDigital + investmentSponsorship + 
-                investmentRadio, data = dataset_final_analysis)
+                investmentRadio, data = log_date_set)
 
 summary(model_2)
 
@@ -368,7 +377,7 @@ model_3 <- lm(formula = gmv ~ Year + week + product_procurement_sla +
                 Event_Dussehra + `Event_Eid & Rathayatra` + Event_FHSD + 
                 Event_NA + Event_Pacman + Event_Republic + Event_Vday + investment + 
                 investmentTV + investmentDigital + investmentSponsorship + 
-                investmentRadio, data = dataset_final_analysis)
+                investmentRadio, data = log_date_set)
 
 summary(model_3)
 
@@ -381,7 +390,7 @@ model_4 <- lm(formula = gmv ~ Year + week + product_procurement_sla +
                 Event_Dussehra + `Event_Eid & Rathayatra` + Event_FHSD + 
                 Event_NA + Event_Pacman + Event_Republic + Event_Vday + 
                 investmentTV + investmentDigital + investmentSponsorship + 
-                investmentRadio, data = dataset_final_analysis)
+                investmentRadio, data = log_date_set)
 
 summary(model_4)
 
@@ -396,7 +405,7 @@ model_5 <- lm(formula = gmv ~ Year + week + product_procurement_sla +
                 Event_Dussehra + `Event_Eid & Rathayatra` + Event_FHSD + 
                 Event_NA + Event_Pacman + Event_Republic + Event_Vday + 
                 investmentTV  + investmentSponsorship + 
-                investmentRadio, data = dataset_final_analysis)
+                investmentRadio, data = log_date_set)
 
 summary(model_5)
 
@@ -410,7 +419,7 @@ model_6 <- lm(formula = gmv ~ Year + week + product_procurement_sla +
                 Event_Dussehra + `Event_Eid & Rathayatra` + Event_FHSD + 
                 Event_NA + Event_Pacman + Event_Republic + Event_Vday + 
                 investmentSponsorship + 
-                investmentRadio, data = dataset_final_analysis)
+                investmentRadio, data = log_date_set)
 
 summary(model_6)
 
@@ -423,7 +432,7 @@ model_7 <- lm(formula = gmv ~ Year + week + product_procurement_sla +
                 Event_Dussehra + `Event_Eid & Rathayatra` + Event_FHSD + 
                 Event_NA + Event_Pacman + Event_Republic + Event_Vday + 
                 investmentSponsorship
-                , data = dataset_final_analysis)
+                , data = log_date_set)
 
 summary(model_7)
 
@@ -436,17 +445,17 @@ model_8 <- lm(formula = gmv ~ Year + week + product_procurement_sla +
                 Event_BED + Event_BSD + `Event_Christmas & New Year` + Event_Diwali + 
                 Event_Dussehra + `Event_Eid & Rathayatra` + Event_FHSD + 
                 Event_NA + Event_Pacman + Event_Republic + Event_Vday 
-              , data = dataset_final_analysis)
+              , data = log_date_set)
 
 summary(model_8)
 
 
-Predict_1 <- predict(model_8,dataset_final_analysis)
-dataset_final_analysis$test_gmv <- Predict_1
+Predict_1 <- predict(model_8,log_date_set)
+log_date_set$test_gmv <- Predict_1
 #View(test)
 # Now, we need to test the r square between actual and predicted sales. 
-r <- cor(dataset_final_analysis$gmv,dataset_final_analysis$test_gmv)
-rsquared <- cor(dataset_final_analysis$gmv,dataset_final_analysis$test_gmv)^2
+r <- cor(log_date_set$gmv,log_date_set$test_gmv)
+rsquared <- cor(log_date_set$gmv,log_date_set$test_gmv)^2
 rsquared
 
 

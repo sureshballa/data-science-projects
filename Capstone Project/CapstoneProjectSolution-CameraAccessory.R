@@ -218,19 +218,24 @@ colnames(dataset_final_analysis)
 is.nan.data.frame <- function(x)
   do.call(cbind, lapply(x, is.nan))
 
-dataset_final_analysis[is.nan(dataset_final_analysis)] <- 0.01
-dataset_final_analysis[is.na(dataset_final_analysis)] <- 0.01
-
-
 dataset_final_analysis <- dataset_final_analysis[-c(9:34)]
 dataset_final_analysis <- dataset_final_analysis[-c(4)]
+
+########linear model.......
+
+linear_data_set <- dataset_final_analysis
+linear_data_set[is.nan(linear_data_set)] <- 0
+linear_data_set[is.na(linear_data_set)] <- 0
+
+
+
 # separate training and testing data
 
 # separate training and testing data
 set.seed(100)
-trainindices= sample(1:nrow(dataset_final_analysis), 0.8*nrow(dataset_final_analysis))
-train = dataset_final_analysis[trainindices,]
-test = dataset_final_analysis[-trainindices,]
+trainindices= sample(1:nrow(linear_data_set), 0.8*nrow(linear_data_set))
+train = linear_data_set[trainindices,]
+test = linear_data_set[-trainindices,]
 
 
 model_1 <-lm(formula = gmv ~ .,data=train)
@@ -386,7 +391,11 @@ rsquared
 
 ####################multiplicative model
 
-log_data_set <- log(dataset_final_analysis)
+log_data_set <- dataset_final_analysis
+log_data_set[is.nan(log_data_set)] <- 0.01
+log_data_set[is.na(log_data_set)] <- 0.01
+
+log_data_set <- log(log_data_set)
 log_data_set[mapply(is.infinite, log_data_set)] <- 1
 
 model_1 <- lm(gmv~.,log_data_set)
