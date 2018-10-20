@@ -1004,3 +1004,30 @@ mult_Dis_model_1$test_gmv <- Predict_1
 r <- cor(mult_Dis_model_1$gmv,mult_Dis_model_1$test_gmv)
 rsquared <- cor(mult_Dis_model_1$gmv,mult_Dis_model_1$test_gmv)^2
 rsquared
+
+########### Koyack Model - Camera Accessory
+Koyck_Model <- dataset_final_analysis[,-c(13:25)]
+Koyck_Model <- slide(Koyck_Model, Var = "gmv",slideBy = -1)
+Koyck_Model <- na.omit(Koyck_Model)
+
+Koyck_Model_1 <- lm(gmv~.,Koyck_Model)
+summary(Koyck_Model_1)
+
+step <- stepAIC(Koyck_Model_1,direction = "both")
+step
+
+model_2 <- lm(formula = gmv ~ Year + week + product_procurement_sla + s1_fact.order_payment_type_COD + 
+                NPS_WeekAvg + investment + investmentTV + investmentDigital + 
+                investmentSponsorship + investmentContentMarketing + investmentAffiliates, 
+              data = Koyck_Model)
+summary(model_2)
+#very low R-squre, no need to go for further modelling
+
+# Koyck model Prediction - Home Audio
+Predict_1 <- predict(model_2, Koyck_Model)
+Koyck_Model$test_gmv <- Predict_1
+# Now, we need to test the r square between actual and predicted sales. 
+r <- cor(Koyck_Model$gmv,Koyck_Model$test_gmv)
+rsquared <- cor(Koyck_Model$gmv,Koyck_Model$test_gmv)^2
+rsquared
+
