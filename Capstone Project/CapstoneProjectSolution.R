@@ -33,7 +33,8 @@ plotHist <- function(data_in, i) {
 ## Reusable function to plot box plots for given data set and ith column
 plotBox <- function(data_in, i) {
   data <- data.frame(x=data_in[[i]])
-  p <- ggplot(data=data, aes(x="", data)) + geom_boxplot()
+  p <- ggplot(data=data, aes(x="", data)) + geom_boxplot() +
+  xlab(colnames(data_in)[i])
   return (p)
 }
 
@@ -246,7 +247,7 @@ correlationMatrix <- cor(consumerElectronicsDataForAnalysisWithDummayVariables, 
 corrplot(correlationMatrix, method = "color", type = "lower", order = "FPC", tl.cex = 0.6)
 
 ## Plot scatter plot for variables that have high correlation.
-highcorr <- c(names(correlationMatrix[,'gmv'])[which(correlationMatrix[,'gmv'] > 0.5)], names(correlationMatrix[,'gmv'])[which(correlationMatrix[,'gmv'] < -0.2)])
+highcorr <- c(names(correlationMatrix[,'gmv'])[which(correlationMatrix[,'gmv'] > 0.1)], names(correlationMatrix[,'gmv'])[which(correlationMatrix[,'gmv'] < -0.2)])
 data_corr <- consumerElectronicsDataForAnalysisWithDummayVariables[,highcorr]
 doPlots(data_corr, fun = plotCorrAgainstGmv, ii = 1:ncol(data_corr))
 
