@@ -947,3 +947,82 @@ r <- cor(mult_Dis_model_1$gmv,mult_Dis_model_1$test_gmv)
 rsquared <- cor(mult_Dis_model_1$gmv,mult_Dis_model_1$test_gmv)^2
 rsquared
 
+########### Koyack Model - Home Audio
+Koyck_Model <- dataset_final_analysis[,-c(13:25)]
+Koyck_Model <- slide(Koyck_Model, Var = "gmv",slideBy = -1)
+Koyck_Model <- na.omit(Koyck_Model)
+
+Koyck_Model_1 <- lm(gmv~.,Koyck_Model)
+summary(Koyck_Model_1)
+
+step <- stepAIC(Koyck_Model_1,direction = "both")
+step
+
+model_2 <- lm(formula = gmv ~ Year + week + deliverycdays + deliverybdays + 
+                product_procurement_sla + offer_percentage + product_mrp_class_cheap + 
+                product_mrp_class_medium + NPS_WeekAvg + investment + investmentDigital + 
+                investmentSponsorship + investmentContentMarketing + investmentOnlinemarketing + 
+                investmentSEM + investmentRadio + `gmv-1`, data = Koyck_Model)
+summary(model_2)
+vif(model_2)
+
+# - week
+model_3 <- lm(formula = gmv ~ Year + deliverycdays + deliverybdays + 
+                product_procurement_sla + offer_percentage + product_mrp_class_cheap + 
+                product_mrp_class_medium + NPS_WeekAvg + investment + investmentDigital + 
+                investmentSponsorship + investmentContentMarketing + investmentOnlinemarketing + 
+                investmentSEM + investmentRadio + `gmv-1`, data = Koyck_Model)
+summary(model_3)
+vif(model_3)
+
+# - product_mrp_class_cheap
+model_4 <- lm(formula = gmv ~ Year + deliverycdays + deliverybdays + 
+                product_procurement_sla + offer_percentage +  
+                product_mrp_class_medium + NPS_WeekAvg + investment + investmentDigital + 
+                investmentSponsorship + investmentContentMarketing + investmentOnlinemarketing + 
+                investmentSEM + investmentRadio + `gmv-1`, data = Koyck_Model)
+summary(model_4)
+vif(model_4)
+
+# - NPS_WeekAvg
+model_5 <- lm(formula = gmv ~ Year + deliverycdays + deliverybdays + 
+                product_procurement_sla + offer_percentage +  
+                product_mrp_class_medium + investment + investmentDigital + 
+                investmentSponsorship + investmentContentMarketing + investmentOnlinemarketing + 
+                investmentSEM + investmentRadio + `gmv-1`, data = Koyck_Model)
+summary(model_5)
+vif(model_5)
+
+# - product_mrp_class_medium
+model_6 <- lm(formula = gmv ~ Year + deliverycdays + deliverybdays + 
+                product_procurement_sla + offer_percentage +  
+                investment + investmentDigital + 
+                investmentSponsorship + investmentContentMarketing + investmentOnlinemarketing + 
+                investmentSEM + investmentRadio + `gmv-1`, data = Koyck_Model)
+summary(model_6)
+
+
+# - `gmv-1`
+model_7 <- lm(formula = gmv ~ Year + deliverycdays + deliverybdays + 
+                product_procurement_sla + offer_percentage +  
+                investment + investmentDigital + 
+                investmentSponsorship + investmentContentMarketing + investmentOnlinemarketing + 
+                investmentSEM + investmentRadio, data = Koyck_Model)
+summary(model_7)
+
+# - deliverycdays - deliverybdays
+model_8 <- lm(formula = gmv ~ Year +  
+                product_procurement_sla + offer_percentage +  
+                investment + investmentDigital + 
+                investmentSponsorship + investmentContentMarketing + investmentOnlinemarketing + 
+                investmentSEM + investmentRadio, data = Koyck_Model)
+summary(model_8)
+
+# Koyck model Prediction - Gaming Accessories
+Predict_1 <- predict(model_8, Koyck_Model)
+Koyck_Model$test_gmv <- Predict_1
+# Now, we need to test the r square between actual and predicted sales. 
+r <- cor(Koyck_Model$gmv,Koyck_Model$test_gmv)
+rsquared <- cor(Koyck_Model$gmv,Koyck_Model$test_gmv)^2
+rsquared
+
