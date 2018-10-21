@@ -140,6 +140,11 @@ consumerElectronicsDataForAnalysis$offer_percentage = (consumerElectronicsDataFo
 
 ## Lets calculate if a product is premium or not based on its MRP in its own category
 
+# Product MRP Class = classifying products in to three categories ??? premium, medium and cheap
+# Premium ??? price range more than 75 percentile in same product_analytic_vertical
+# Medium ??? price within 25 to 75 percentile in same product_analytic_vertical
+# Cheap ??? price less than 25 percentile in same product_analytic_vertical
+
 products_quantiles <- consumerElectronicsDataForAnalysis %>% group_by(product_analytic_category, product_analytic_sub_category, product_analytic_vertical) %>% summarise(`75%`=quantile(product_mrp, probs=0.75), `25%`=quantile(product_mrp, probs=0.25))
 
 consumerElectronicsDataForAnalysis <- merge(consumerElectronicsDataForAnalysis, products_quantiles, all.x = TRUE)
@@ -284,6 +289,9 @@ weekAggregationSplit1 <- consumerElectronicsDataForAnalysisForAggregation %>% dp
 weekAggregationSplit2 <- consumerElectronicsDataForAnalysisForAggregation %>% dplyr::select(Year, week, deliverycdays, deliverybdays, product_procurement_sla, offer_percentage) %>% group_by(Year, week) %>% summarise_all(funs(mean), na.rm = TRUE)
 
 consumerElectronicsDataForAnalysisWeeklyAggregation <- merge(weekAggregationSplit1, weekAggregationSplit2, by = c("Year", "week"), all.x=TRUE)
+
+# Lets create new columns for each possible value of category (repeated across all category columns) that specifies percentage of categorical value among other values in same colums. 
+# For example, a week with 2 prepaid and 3 COD orders, aggregated columns are payment_prepaid = 2/5 and payment_cod = 3/5
 
 for (category_variable_index in categorical_variables_indexes) {
   dataFrameTemp <- consumerElectronicsDataForAnalysisForAggregation %>% 
