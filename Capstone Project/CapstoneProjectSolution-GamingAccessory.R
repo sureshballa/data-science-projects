@@ -14,7 +14,8 @@
 
 ## Begin of Install and load required libraries
 
-load.libraries <- c('reshape', 'stringr', 'dplyr', 'data.table', 'e1071', 'gridExtra', 'corrplot', 'ggplot2', 'tidyr', 'MASS', 'car', 'caret', 'GGally', 'mice','cowplot','caTools')
+load.libraries <- c('reshape', 'DataCombine', 'stringr', 'dplyr', 'data.table', 'e1071', 'gridExtra', 'corrplot', 'ggplot2', 'tidyr', 'MASS', 'car', 'caret', 'GGally', 'mice','cowplot','caTools')
+
 install.lib <- load.libraries[!load.libraries %in% installed.packages()]
 for(libs in install.lib) install.packages(libs, dependencies = TRUE)
 sapply(load.libraries, require, character = TRUE)
@@ -236,43 +237,47 @@ summary(model_1)
 step <- stepAIC(model_1, direction="both")
 step
 
-model_2 <- lm(formula = gmv ~ Year + deliverybdays + product_procurement_sla + 
-                offer_percentage + investment + investmentTV + investmentDigital + 
-                investmentContentMarketing + investmentOnlinemarketing + 
-                investmentAffiliates + investmentSEM + investmentRadio + 
-                investmentOther, data = train)
+model_2 <-   lm(formula = gmv ~ week + deliverybdays + product_procurement_sla + 
+                product_mrp_class_cheap + Event_BED + `Event_Christmas & New Year` + 
+                Event_Dussehra + Event_FHSD + Event_Independence + Event_NA + 
+                investment + investmentTV + investmentSponsorship + investmentContentMarketing + 
+                investmentOnlinemarketing + investmentSEM + investmentRadio + 
+                NPS_WeekAvg, data = train)
 summary(model_2)
 
 
 vif(model_2)
 
-#deliverybdays
+#NPS_WeekAvg,Event_Dussehra,Event_Independence
 
-model_3 <- lm(formula = gmv ~ Year + product_procurement_sla + 
-                offer_percentage + investment + investmentTV + investmentDigital + 
-                investmentContentMarketing + investmentOnlinemarketing + 
-                investmentAffiliates + investmentSEM + investmentRadio + 
-                investmentOther, data = train)
+model_3 <- lm(formula = gmv ~ week + deliverybdays + product_procurement_sla + 
+                product_mrp_class_cheap + Event_BED + `Event_Christmas & New Year` + 
+                Event_FHSD + Event_NA + 
+                investment + investmentTV + investmentSponsorship + investmentContentMarketing + 
+                investmentOnlinemarketing + investmentSEM + investmentRadio
+                , data = train)
 summary(model_3)
 
 
 vif(model_3)
-#offer_percentage
+#Event_FHSD
 
-model_4 <- lm(formula = gmv ~ Year + product_procurement_sla + 
-                investment + investmentTV + investmentDigital + 
-                investmentContentMarketing + investmentOnlinemarketing + 
-                investmentAffiliates + investmentSEM + investmentRadio + 
-                investmentOther, data = train)
+model_4 <-   lm(formula = gmv ~ week + deliverybdays + product_procurement_sla + 
+                product_mrp_class_cheap + Event_BED + `Event_Christmas & New Year` + 
+                Event_NA + 
+                investment + investmentTV + investmentSponsorship + investmentContentMarketing + 
+                investmentOnlinemarketing + investmentSEM + investmentRadio
+              , data = train)
 summary(model_4)
 
-#investment
+#investment, product_mrp_class_cheap
 
-model_5 <- lm(formula = gmv ~ Year + product_procurement_sla + 
-                investmentTV + investmentDigital + 
-                investmentContentMarketing + investmentOnlinemarketing + 
-                investmentAffiliates + investmentSEM + investmentRadio + 
-                investmentOther, data = train)
+model_5 <- lm(formula = gmv ~ week + deliverybdays + product_procurement_sla + 
+                product_mrp_class_cheap + Event_BED + `Event_Christmas & New Year` + 
+                Event_NA + 
+                investment + investmentTV + investmentSponsorship + investmentContentMarketing + 
+                investmentOnlinemarketing + investmentSEM + investmentRadio
+              , data = train)
 summary(model_5)
 
 
@@ -281,7 +286,7 @@ vif(model_5)
 # predicting the results in test dataset
 Predict_1 <- predict(model_5,test)
 test$test_gmv <- Predict_1
-View(test)
+#View(test)
 # Now, we need to test the r square between actual and predicted sales. 
 r <- cor(test$gmv,test$test_gmv)
 rsquared <- cor(test$gmv,test$test_gmv)^2
@@ -519,15 +524,15 @@ rsquared <- cor(log_data_set$gmv,log_data_set$test_gmv)^2
 rsquared
 
 ############################Distributed lag models
-install.packages("DataCombine")
-library(DataCombine)
+
 Dis_Model <- dataset_final_analysis
 
 Dis_model_1 <- slide(Dis_Model, Var = "gmv",slideBy = -1)
+Dis_model_1 <- Dis_model_1[-c(3)]
 
-Dis_model_1 <- slide(Dis_model_1, Var = "gmv",slideBy = -2)
+#Dis_model_1 <- slide(Dis_model_1, Var = "gmv",slideBy = -2)
 
-Dis_model_1 <- slide(Dis_model_1, Var = "gmv",slideBy = -3)
+#Dis_model_1 <- slide(Dis_model_1, Var = "gmv",slideBy = -3)
 
 Dis_model_1[is.nan(Dis_model_1)] <- 0
 Dis_model_1[is.na(Dis_model_1)] <- 0
@@ -535,7 +540,7 @@ Dis_model_1[is.na(Dis_model_1)] <- 0
 #Dis_model <- scale(Dis_model)
 #Dis_model <- data.frame(Dis_model)
 
-dist_model <- lm(gmv~.,Dis_model_1)
+dist_model <- lm(`gmv-1` ~.,Dis_model_1)
 
 summary(dist_model)
 
@@ -548,107 +553,243 @@ vif(model_2)
 
 
 #investmentOther
-model_3 <- lm(formula = gmv ~ Year + deliverycdays + deliverybdays + offer_percentage + 
-                s1_fact.order_payment_type_COD + product_mrp_class_cheap + 
-                product_mrp_class_medium + `Event_Christmas & New Year` + 
-                Event_Dussehra + Event_FHSD + Event_Independence + Event_NA + 
-                Event_Republic + investment + investmentTV + investmentDigital + 
-                investmentSponsorship + investmentContentMarketing + investmentOnlinemarketing + 
-                investmentAffiliates + investmentSEM + investmentRadio + 
-                `gmv-1`, data = Dis_model_1)
+model_3 <- lm(formula = `gmv-1` ~ week + deliverycdays + deliverybdays + 
+                product_procurement_sla + offer_percentage + s1_fact.order_payment_type_COD + 
+                product_mrp_class_cheap + product_mrp_class_medium + Event_BSD + 
+                `Event_Christmas & New Year` + Event_Dussehra + `Event_Eid & Rathayatra` + 
+                Event_FHSD + Event_Independence + Event_NA + Event_Pacman + 
+                Event_Rakshabandhan + NPS_WeekAvg + investment + investmentTV + 
+                investmentDigital + investmentSponsorship + investmentContentMarketing + 
+                investmentAffiliates + investmentRadio + investmentOther, 
+                data = Dis_model_1)
 
 
 summary(model_3)
 
 vif(model_3)
-#investmentOnlinemarketing
-model_4 <- lm(formula = gmv ~ Year + deliverycdays + deliverybdays + offer_percentage + 
-                s1_fact.order_payment_type_COD + product_mrp_class_cheap + 
-                product_mrp_class_medium + `Event_Christmas & New Year` + 
-                Event_Dussehra + Event_FHSD + Event_Independence + Event_NA + 
-                Event_Republic + investment + investmentTV + investmentDigital + 
-                investmentSponsorship + investmentContentMarketing  + 
-                investmentAffiliates + investmentSEM + investmentRadio + 
-                `gmv-1`, data = Dis_model_1)
+#investmentSponsorship
+model_4 <- lm(formula = `gmv-1` ~ week + deliverycdays + deliverybdays + 
+                product_procurement_sla + offer_percentage + s1_fact.order_payment_type_COD + 
+                product_mrp_class_cheap + product_mrp_class_medium + Event_BSD + 
+                `Event_Christmas & New Year` + Event_Dussehra + `Event_Eid & Rathayatra` + 
+                Event_FHSD + Event_Independence + Event_NA + Event_Pacman + 
+                Event_Rakshabandhan + NPS_WeekAvg + investment + investmentTV + 
+                investmentDigital + investmentContentMarketing + 
+                investmentAffiliates + investmentRadio + investmentOther, 
+                data = Dis_model_1)
 
 
 summary(model_4)
 
 vif(model_4)
-#Event_Republic,investmentAffiliates
+#deliverybdays
 
-model_5 <- lm(formula = gmv ~ Year + deliverycdays + deliverybdays + offer_percentage + 
-                s1_fact.order_payment_type_COD + product_mrp_class_cheap + 
-                product_mrp_class_medium + `Event_Christmas & New Year` + 
-                Event_Dussehra + Event_FHSD + Event_Independence + Event_NA + 
-                investment + investmentTV + investmentDigital + 
-                investmentSponsorship + investmentContentMarketing  + 
-                investmentSEM + investmentRadio + 
-                `gmv-1`, data = Dis_model_1)
+model_5 <- lm(formula = `gmv-1` ~ week + deliverycdays + 
+                product_procurement_sla + offer_percentage + s1_fact.order_payment_type_COD + 
+                product_mrp_class_cheap + product_mrp_class_medium + Event_BSD + 
+                `Event_Christmas & New Year` + Event_Dussehra + `Event_Eid & Rathayatra` + 
+                Event_FHSD + Event_Independence + Event_NA + Event_Pacman + 
+                Event_Rakshabandhan + NPS_WeekAvg + investment + investmentTV + 
+                investmentDigital + investmentContentMarketing + 
+                investmentAffiliates + investmentRadio + investmentOther, 
+                data = Dis_model_1)
 
 
 summary(model_5)
 
 vif(model_5)
 
-#s1_fact.order_payment_type_COD, deliverycdays
+#deliverycdays
 
-model_6 <- lm(formula = gmv ~ Year + deliverybdays + offer_percentage + 
-                product_mrp_class_cheap + 
-                product_mrp_class_medium + `Event_Christmas & New Year` + 
-                Event_Dussehra + Event_FHSD + Event_Independence + Event_NA + 
-                investment + investmentTV + investmentDigital + 
-                investmentSponsorship + investmentContentMarketing  + 
-                investmentSEM + investmentRadio + 
-                `gmv-1`, data = Dis_model_1)
+model_6 <- lm(formula = `gmv-1` ~ week + 
+                product_procurement_sla + offer_percentage + s1_fact.order_payment_type_COD + 
+                product_mrp_class_cheap + product_mrp_class_medium + Event_BSD + 
+                `Event_Christmas & New Year` + Event_Dussehra + `Event_Eid & Rathayatra` + 
+                Event_FHSD + Event_Independence + Event_NA + Event_Pacman + 
+                Event_Rakshabandhan + NPS_WeekAvg + investment + investmentTV + 
+                investmentDigital + investmentContentMarketing + 
+                investmentAffiliates + investmentRadio + investmentOther, 
+                data = Dis_model_1)
 
 
 summary(model_6)
 
 vif(model_6)
 
-#investmentDigital
+#investment
 
 
-model_7 <- lm(formula = gmv ~ Year + deliverybdays + offer_percentage + 
-                product_mrp_class_cheap + 
-                product_mrp_class_medium + `Event_Christmas & New Year` + 
-                Event_Dussehra + Event_FHSD + Event_Independence + Event_NA + 
-                investment + investmentTV + 
-                investmentSponsorship + investmentContentMarketing  + 
-                investmentSEM + investmentRadio + 
-                `gmv-1`, data = Dis_model_1)
+model_7 <- lm(formula = `gmv-1` ~ week + 
+                product_procurement_sla + offer_percentage + s1_fact.order_payment_type_COD + 
+                product_mrp_class_cheap + product_mrp_class_medium + Event_BSD + 
+                `Event_Christmas & New Year` + Event_Dussehra + `Event_Eid & Rathayatra` + 
+                Event_FHSD + Event_Independence + Event_NA + Event_Pacman + 
+                Event_Rakshabandhan + NPS_WeekAvg + investmentTV + 
+                investmentDigital + investmentContentMarketing + 
+                investmentAffiliates + investmentRadio + investmentOther, 
+                data = Dis_model_1)
 
 
 summary(model_7)
 
 vif(model_7)
 
-#deliverycdays
+#Event_BSD
 
-model_8 <- lm(formula = gmv ~ Year + deliverybdays + offer_percentage + 
-                product_mrp_class_cheap + 
-                product_mrp_class_medium + `Event_Christmas & New Year` + 
-                Event_Dussehra + Event_FHSD + Event_Independence + Event_NA + 
-                investment + investmentTV  +
-                investmentSponsorship + investmentContentMarketing  + 
-                investmentRadio + 
-                `gmv-1`, data = Dis_model_1)
+model_8 <- lm(formula = `gmv-1` ~ week + 
+                product_procurement_sla + offer_percentage + s1_fact.order_payment_type_COD + 
+                product_mrp_class_cheap + product_mrp_class_medium + 
+                `Event_Christmas & New Year` + Event_Dussehra + `Event_Eid & Rathayatra` + 
+                Event_FHSD + Event_Independence + Event_NA + Event_Pacman + 
+                Event_Rakshabandhan + NPS_WeekAvg + investmentTV + 
+                investmentDigital + investmentContentMarketing + 
+                investmentAffiliates + investmentRadio + investmentOther, 
+                data = Dis_model_1)
 summary(model_8)
 
-#Event_Dussehra,Event_FHSD
+#investmentAffiliates
 
-model_9 <- lm(formula = gmv ~ Year + deliverybdays + offer_percentage + 
-                product_mrp_class_cheap + 
-                product_mrp_class_medium + `Event_Christmas & New Year` + 
-                Event_Independence + Event_NA + 
-                investment + investmentTV  +
-                investmentSponsorship + investmentContentMarketing  + 
-                investmentRadio + 
-                `gmv-1`, data = Dis_model_1)
+model_9 <- lm(formula = `gmv-1` ~ week + 
+                product_procurement_sla + offer_percentage + s1_fact.order_payment_type_COD + 
+                product_mrp_class_cheap + product_mrp_class_medium + 
+                `Event_Christmas & New Year` + Event_Dussehra + `Event_Eid & Rathayatra` + 
+                Event_FHSD + Event_Independence + Event_NA + Event_Pacman + 
+                Event_Rakshabandhan + NPS_WeekAvg + investmentTV + 
+                investmentDigital + investmentContentMarketing + 
+                investmentRadio + investmentOther, 
+                data = Dis_model_1)
 summary(model_9)
 
-Predict_1 <- predict(model_9,Dis_model_1)
+#offer_percentage'
+
+model_9 <- lm(formula = `gmv-1` ~ week + 
+                product_procurement_sla + s1_fact.order_payment_type_COD + 
+                product_mrp_class_cheap + product_mrp_class_medium + 
+                `Event_Christmas & New Year` + Event_Dussehra + `Event_Eid & Rathayatra` + 
+                Event_FHSD + Event_Independence + Event_NA + Event_Pacman + 
+                Event_Rakshabandhan + NPS_WeekAvg + investmentTV + 
+                investmentDigital + investmentContentMarketing + 
+                investmentRadio + investmentOther, 
+              data = Dis_model_1)
+summary(model_9)
+#Event_NA
+model_10 <- lm(formula = `gmv-1` ~ week + 
+                product_procurement_sla + s1_fact.order_payment_type_COD + 
+                product_mrp_class_cheap + product_mrp_class_medium + 
+                `Event_Christmas & New Year` + Event_Dussehra + `Event_Eid & Rathayatra` + 
+                Event_FHSD + Event_Independence + Event_Pacman + 
+                Event_Rakshabandhan + NPS_WeekAvg + investmentTV + 
+                investmentDigital + investmentContentMarketing + 
+                investmentRadio + investmentOther, 
+              data = Dis_model_1)
+summary(model_10)
+
+#Event_Independence
+
+model_11 <- lm(formula = `gmv-1` ~ week + 
+                 product_procurement_sla + s1_fact.order_payment_type_COD + 
+                 product_mrp_class_cheap + product_mrp_class_medium + 
+                 `Event_Christmas & New Year` + Event_Dussehra + `Event_Eid & Rathayatra` + 
+                 Event_FHSD + Event_Pacman + 
+                 Event_Rakshabandhan + NPS_WeekAvg + investmentTV + 
+                 investmentDigital + investmentContentMarketing + 
+                 investmentRadio + investmentOther, 
+               data = Dis_model_1)
+summary(model_11)
+
+#`Event_Christmas & New Year`
+
+model_12 <- lm(formula = `gmv-1` ~ week + 
+                 product_procurement_sla + s1_fact.order_payment_type_COD + 
+                 product_mrp_class_cheap + product_mrp_class_medium + 
+                 Event_Dussehra + `Event_Eid & Rathayatra` + 
+                 Event_FHSD + Event_Pacman + 
+                 Event_Rakshabandhan + NPS_WeekAvg + investmentTV + 
+                 investmentDigital + investmentContentMarketing + 
+                 investmentRadio + investmentOther, 
+               data = Dis_model_1)
+summary(model_12)
+#s1_fact.order_payment_type_COD
+
+model_13 <- lm(formula = `gmv-1` ~ week + 
+                 product_procurement_sla + 
+                 product_mrp_class_cheap + product_mrp_class_medium + 
+                 Event_Dussehra + `Event_Eid & Rathayatra` + 
+                 Event_FHSD + Event_Pacman + 
+                 Event_Rakshabandhan + NPS_WeekAvg + investmentTV + 
+                 investmentDigital + investmentContentMarketing + 
+                 investmentRadio + investmentOther, 
+               data = Dis_model_1)
+summary(model_13)
+#investmentRadio
+model_14 <- lm(formula = `gmv-1` ~ week + 
+                 product_procurement_sla + 
+                 product_mrp_class_cheap + product_mrp_class_medium + 
+                 Event_Dussehra + `Event_Eid & Rathayatra` + 
+                 Event_FHSD + Event_Pacman + 
+                 Event_Rakshabandhan + NPS_WeekAvg + investmentTV + 
+                 investmentDigital + investmentContentMarketing + 
+                 investmentOther, 
+               data = Dis_model_1)
+summary(model_14)
+
+
+#investmentTV
+model_14 <- lm(formula = `gmv-1` ~ week + 
+                 product_procurement_sla + 
+                 product_mrp_class_cheap + product_mrp_class_medium + 
+                 Event_Dussehra + `Event_Eid & Rathayatra` + 
+                 Event_FHSD + Event_Pacman + 
+                 Event_Rakshabandhan + NPS_WeekAvg + 
+                 investmentDigital + investmentContentMarketing + 
+                 investmentOther, 
+                 data = Dis_model_1)
+summary(model_14)
+#investmentOther
+model_15 <- lm(formula = `gmv-1` ~ week + 
+                 product_procurement_sla + 
+                 product_mrp_class_cheap + product_mrp_class_medium + 
+                 Event_Dussehra + `Event_Eid & Rathayatra` + 
+                 Event_FHSD + Event_Pacman + 
+                 Event_Rakshabandhan + NPS_WeekAvg + 
+                 investmentDigital + investmentContentMarketing
+                 , 
+               data = Dis_model_1)
+summary(model_15)
+#`Event_Eid & Rathayatra`
+
+model_16 <- lm(formula = `gmv-1` ~ week + 
+                 product_procurement_sla + 
+                 product_mrp_class_cheap + product_mrp_class_medium + 
+                 Event_Dussehra + 
+                 Event_FHSD + Event_Pacman + 
+                 Event_Rakshabandhan + NPS_WeekAvg + 
+                 investmentDigital + investmentContentMarketing, 
+               data = Dis_model_1)
+summary(model_16)
+
+#product_mrp_class_cheap
+model_17 <- lm(formula = `gmv-1` ~ week + 
+                 product_procurement_sla + 
+                 product_mrp_class_medium + 
+                 Event_Dussehra + 
+                 Event_FHSD + Event_Pacman + 
+                 Event_Rakshabandhan + NPS_WeekAvg + 
+                 investmentDigital + investmentContentMarketing, 
+               data = Dis_model_1)
+summary(model_17)
+#Event_Pacman
+model_18 <- lm(formula = `gmv-1` ~ week + 
+                 product_procurement_sla + 
+                 product_mrp_class_medium + 
+                 Event_Dussehra + 
+                 Event_FHSD + 
+                 Event_Rakshabandhan + NPS_WeekAvg + 
+                 investmentDigital + investmentContentMarketing, 
+               data = Dis_model_1)
+summary(model_18)
+
+Predict_1 <- predict(model_18,Dis_model_1)
 Dis_model_1$test_gmv <- Predict_1
 #View(test)
 # Now, we need to test the r square between actual and predicted sales. 
@@ -660,10 +801,8 @@ rsquared
 mult_Dis_Model <- dataset_final_analysis
 
 mult_Dis_model_1 <- slide(mult_Dis_Model, Var = "gmv",slideBy = -1)
-
-mult_Dis_model_1 <- slide(mult_Dis_model_1, Var = "gmv",slideBy = -2)
-
-mult_Dis_model_1 <- slide(mult_Dis_model_1, Var = "gmv",slideBy = -3)
+colnames(mult_Dis_model_1)
+mult_Dis_model_1 <- mult_Dis_model_1[-c(3)]
 
 mult_Dis_model_1[is.nan(mult_Dis_model_1)] <- 0.01
 mult_Dis_model_1[is.na(mult_Dis_model_1)] <- 0.01
@@ -671,7 +810,7 @@ mult_Dis_model_1[is.na(mult_Dis_model_1)] <- 0.01
 mult_Dis_model_1 <- log(mult_Dis_model_1)
 mult_Dis_model_1[mapply(is.infinite, mult_Dis_model_1)] <- 1
 
-mult_dist_model <- lm(gmv~.,mult_Dis_model_1)
+mult_dist_model <- lm(`gmv-1`~.,mult_Dis_model_1)
 
 summary(mult_dist_model)
 
@@ -683,95 +822,128 @@ summary(model_2)
 vif(model_2)
 #`Event_Christmas & New Year`,week
 
-model_3 <- lm(formula = gmv ~ Year + offer_percentage + s1_fact.order_payment_type_COD + 
-                s1_fact.order_payment_type_Prepaid + Event_BED + Event_BSD + 
-                Event_Diwali + Event_Dussehra + 
-                Event_FHSD + Event_Independence + Event_NA + Event_Pacman + 
-                Event_Rakshabandhan + Event_Republic + Event_Vday + investmentTV + 
-                investmentDigital + investmentSponsorship + investmentContentMarketing + 
-                investmentOnlinemarketing + investmentAffiliates + investmentRadio + 
-                investmentOther + `gmv-1`, data = mult_Dis_model_1)
+model_3 <- lm(formula = `gmv-1` ~ Year + week + deliverycdays + deliverybdays + 
+                product_procurement_sla + offer_percentage + s1_fact.order_payment_type_COD + 
+                s1_fact.order_payment_type_Prepaid + product_mrp_class_cheap + 
+                product_mrp_class_medium + product_mrp_class_premium + Event_BED + 
+                `Event_Christmas & New Year` + Event_Diwali + `Event_Eid & Rathayatra` + 
+                Event_FHSD + Event_Rakshabandhan + Event_Republic + Event_Vday + 
+                NPS_WeekAvg + investment + investmentTV + investmentDigital + 
+                investmentContentMarketing + investmentAffiliates + investmentSEM + 
+                investmentRadio + investmentOther, data = mult_Dis_model_1)
 
 summary(model_3)
 
-#investmentSponsorship,investmentAffiliates
+#offer_percentage 
 
-model_4 <- lm(formula = gmv ~ Year + offer_percentage + s1_fact.order_payment_type_COD + 
-                s1_fact.order_payment_type_Prepaid + Event_BED + Event_BSD + 
-                Event_Diwali + Event_Dussehra + 
-                Event_FHSD + Event_Independence + Event_NA + Event_Pacman + 
-                Event_Rakshabandhan + Event_Republic + Event_Vday + investmentTV + 
-                investmentDigital + investmentContentMarketing + 
-                investmentOnlinemarketing + investmentRadio + 
-                investmentOther + `gmv-1`, data = mult_Dis_model_1)
-
+model_4 <- lm(formula = `gmv-1` ~ Year + week + deliverycdays + deliverybdays + 
+                product_procurement_sla + s1_fact.order_payment_type_COD + 
+                s1_fact.order_payment_type_Prepaid + product_mrp_class_cheap + 
+                product_mrp_class_medium + product_mrp_class_premium + Event_BED + 
+                `Event_Christmas & New Year` + Event_Diwali + `Event_Eid & Rathayatra` + 
+                Event_FHSD + Event_Rakshabandhan + Event_Republic + Event_Vday + 
+                NPS_WeekAvg + investment + investmentTV + investmentDigital + 
+                investmentContentMarketing + investmentAffiliates + investmentSEM + 
+                investmentRadio + investmentOther, data = mult_Dis_model_1)
 summary(model_4)
 
-#investmentDigital, investmentContentMarketing, Year
+#product_procurement_sla
 
-model_5 <- lm(formula = gmv ~ offer_percentage + s1_fact.order_payment_type_COD + 
-                s1_fact.order_payment_type_Prepaid + Event_BED + Event_BSD + 
-                Event_Diwali + Event_Dussehra + 
-                Event_FHSD + Event_Independence + Event_NA + Event_Pacman + 
-                Event_Rakshabandhan + Event_Republic + Event_Vday + investmentTV + 
-                investmentOnlinemarketing + investmentRadio + 
-                investmentOther + `gmv-1`, data = mult_Dis_model_1)
-
-summary(model_5)
-
-#Event_Republic, Event_Diwali, Event_BSD, Event_FHSD
-
-
-model_5 <- lm(formula = gmv ~ offer_percentage + s1_fact.order_payment_type_COD + 
-                s1_fact.order_payment_type_Prepaid + Event_BED +  
-                Event_Dussehra + 
-                Event_Independence + Event_NA + Event_Pacman + 
-                Event_Rakshabandhan  + Event_Vday + investmentTV + 
-                investmentOnlinemarketing + investmentRadio + 
-                investmentOther + `gmv-1`, data = mult_Dis_model_1)
+model_5 <- lm(formula = `gmv-1` ~ Year + week + deliverycdays + deliverybdays + 
+                s1_fact.order_payment_type_COD + 
+                s1_fact.order_payment_type_Prepaid + product_mrp_class_cheap + 
+                product_mrp_class_medium + product_mrp_class_premium + Event_BED + 
+                `Event_Christmas & New Year` + Event_Diwali + `Event_Eid & Rathayatra` + 
+                Event_FHSD + Event_Rakshabandhan + Event_Republic + Event_Vday + 
+                NPS_WeekAvg + investment + investmentTV + investmentDigital + 
+                investmentContentMarketing + investmentAffiliates + investmentSEM + 
+                investmentRadio + investmentOther, data = mult_Dis_model_1)
 
 summary(model_5)
 
-#Event_NA, Event_Dussehra, Event_Pacman
-model_6 <- lm(formula = gmv ~ offer_percentage + s1_fact.order_payment_type_COD + 
-                s1_fact.order_payment_type_Prepaid + Event_BED +  
-                Event_Independence  +  
-                Event_Rakshabandhan  + Event_Vday + investmentTV + 
-                investmentOnlinemarketing + investmentRadio + 
-                investmentOther + `gmv-1`, data = mult_Dis_model_1)
+#Event_FHSD
+
+
+model_5 <- lm(formula = `gmv-1` ~ Year + week + deliverycdays + deliverybdays + 
+                s1_fact.order_payment_type_COD + 
+                s1_fact.order_payment_type_Prepaid + product_mrp_class_cheap + 
+                product_mrp_class_medium + product_mrp_class_premium + Event_BED + 
+                `Event_Christmas & New Year` + Event_Diwali + `Event_Eid & Rathayatra` + 
+                Event_Rakshabandhan + Event_Republic + Event_Vday + 
+                NPS_WeekAvg + investment + investmentTV + investmentDigital + 
+                investmentContentMarketing + investmentAffiliates + investmentSEM + 
+                investmentRadio + investmentOther, data = mult_Dis_model_1)
+
+summary(model_5)
+
+#Event_Vday,Event_BED,deliverycdays,deliverybdays
+model_6 <- lm(formula = `gmv-1` ~ Year + week +
+                s1_fact.order_payment_type_COD + 
+                s1_fact.order_payment_type_Prepaid + product_mrp_class_cheap + 
+                product_mrp_class_medium + product_mrp_class_premium + 
+                `Event_Christmas & New Year` + Event_Diwali + `Event_Eid & Rathayatra` + 
+                Event_Rakshabandhan + Event_Republic + 
+                NPS_WeekAvg + investment + investmentTV + investmentDigital + 
+                investmentContentMarketing + investmentAffiliates + investmentSEM + 
+                investmentRadio + investmentOther, data = mult_Dis_model_1)
 
 summary(model_6)
 
-#Event_BED, offer_percentage
+#product_mrp_class_cheap, `Event_Christmas & New Year`, Event_Republic 
 
-model_7 <- lm(formula = gmv ~ s1_fact.order_payment_type_COD + 
-                s1_fact.order_payment_type_Prepaid  +  
-                Event_Independence  +  
-                Event_Rakshabandhan  + Event_Vday + investmentTV + 
-                investmentOnlinemarketing + investmentRadio + 
-                investmentOther + `gmv-1`, data = mult_Dis_model_1)
+model_7 <- lm(formula = `gmv-1` ~ Year + week +
+                s1_fact.order_payment_type_COD + 
+                s1_fact.order_payment_type_Prepaid  + 
+                product_mrp_class_medium + product_mrp_class_premium + 
+                Event_Diwali + `Event_Eid & Rathayatra` + 
+                Event_Rakshabandhan + 
+                NPS_WeekAvg + investment + investmentTV + investmentDigital + 
+                investmentContentMarketing + investmentAffiliates + investmentSEM + 
+                investmentRadio + investmentOther, data = mult_Dis_model_1)
 
 summary(model_7)
 
-#Event_Independence, Event_Vday,Event_Rakshabandhan,s1_fact.order_payment_type_Prepaid
+#Event_Rakshabandhan, Event_Diwali
 
 
-model_8 <- lm(formula = gmv ~ investmentTV + 
-                investmentOnlinemarketing + investmentRadio + 
-                investmentOther + `gmv-1`, data = mult_Dis_model_1)
+model_8 <- lm(formula = `gmv-1` ~ Year + week +
+                s1_fact.order_payment_type_COD + 
+                s1_fact.order_payment_type_Prepaid  + 
+                product_mrp_class_medium + product_mrp_class_premium + 
+                `Event_Eid & Rathayatra` + 
+                NPS_WeekAvg + investment + investmentTV + investmentDigital + 
+                investmentContentMarketing + investmentAffiliates + investmentSEM + 
+                investmentRadio + investmentOther, data = mult_Dis_model_1)
 
 summary(model_8)
 
+#order_payment_type_Prepaid, investmentTV,investmentAffiliates
 
-Predict_1 <- predict(model_8,mult_Dis_model_1)
+model_9 <- lm(formula = `gmv-1` ~ Year + week +
+                s1_fact.order_payment_type_COD + 
+                product_mrp_class_medium + product_mrp_class_premium + 
+                `Event_Eid & Rathayatra` + 
+                NPS_WeekAvg + investment + investmentDigital + 
+                investmentContentMarketing + investmentSEM + 
+                investmentRadio + investmentOther, data = mult_Dis_model_1)
+
+summary(model_9)
+##investmentContentMarketing,NPS_WeekAvg,`Event_Eid & Rathayatra`,
+model_10 <- lm(formula = `gmv-1` ~ Year + week +
+                s1_fact.order_payment_type_COD + 
+                product_mrp_class_premium + 
+                investmentDigital + product_mrp_class_medium +
+                 investmentSEM + investment +
+                investmentRadio + investmentOther, data = mult_Dis_model_1)
+
+summary(model_10)
+
+
+Predict_1 <- predict(model_10,mult_Dis_model_1)
 mult_Dis_model_1$test_gmv <- Predict_1
 #View(test)
 # Now, we need to test the r square between actual and predicted sales. 
 r <- cor(mult_Dis_model_1$gmv,mult_Dis_model_1$test_gmv)
 rsquared <- cor(mult_Dis_model_1$gmv,mult_Dis_model_1$test_gmv)^2
 rsquared
-
-
-
-
 
